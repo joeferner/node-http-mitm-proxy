@@ -32,10 +32,19 @@ proxy.listen(8081);
 
 # SSL
 
-Create a key.pem and cert.pem for signing SSL requests
+Create a CA
 ```
-req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem
+cd ~/.http-mitm-proxy
+openssl genrsa -out ca/ca.key 1024
+openssl req -new -x509 -days 3650 -extensions v3_ca -keyout ca/cakey.pem -out ca/cacert.pem -config /etc/ssl/openssl.cnf
+echo "02" > ca/cacert.srl
+
+openssl genrsa -out www.google.com-key.pem 1024
+openssl req -new -key www.google.com-key.pem -out www.google.com.pem
+openssl x509 -req -days 3650 -CA ca/cacert.pem -CAkey ca/cakey.pem -in www.google.com.csr -out www.google.com-cert.pem
 ```
+
+Import ca/cacert.pem into the browser.
 
 # API
 

@@ -11,10 +11,6 @@ var args = optimist
     default: 80,
     describe: 'HTTP Port.'
   })
-  .options('httpsPort', {
-    default: null,
-    describe: 'HTTPS Port.'
-  })
   .alias('p', 'port')
   .argv;
 
@@ -27,8 +23,5 @@ var proxy = require('../lib/proxy')();
 proxy.onError(function(ctx, err) {
   console.error('proxy error:', err);
 });
-proxy.listen(args.port, args.httpsPort);
+proxy.listen(args);
 console.log('proxy listening on ' + args.port);
-if (args.httpsPort) {
-  console.log('proxy listening on ' + args.httpsPort);
-}
