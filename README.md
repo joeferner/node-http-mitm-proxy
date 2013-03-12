@@ -30,6 +30,13 @@ proxy.onRequest(function(ctx, callback) {
 proxy.listen(8081);
 ```
 
+# SSL
+
+Create a key.pem and cert.pem for signing SSL requests
+```
+req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem
+```
+
 # API
 
 ## Proxy
