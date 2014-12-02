@@ -27,7 +27,7 @@ proxy.onRequest(function(ctx, callback) {
   return callback();
 });
 
-proxy.listen(8081);
+proxy.listen({port: 8081});
 ```
 
 # SSL
