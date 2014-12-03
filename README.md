@@ -81,11 +81,13 @@ Starts the proxy listening on the given port.
 
 __Arguments__
 
- * port - The port to listen on.
+ * options - An object with the following options:
+  * port - The port to listen on (default: 8080).
+  * sslCertCacheDir - Path to the certificates cache directory (default: ~/.http-mitm-proxy)
 
 __Example__
 
-    proxy.listen(80);
+    proxy.listen({ port: 80 });
 
 <a name="proxy_onError" />
 ### proxy.onError(fn) or ctx.onError(fn)

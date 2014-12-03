@@ -38,5 +38,5 @@ proxy.onResponseData(function(ctx, chunk, callback) {
   return callback(null, chunk);
 });
 
-proxy.listen(port);
+proxy.listen({ port: port });
 console.log('listening on ' + port);
