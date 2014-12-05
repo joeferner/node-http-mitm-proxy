@@ -51,6 +51,7 @@ Import ca/cacert.pem into the browser.
 ## Proxy
  * [listen](#proxy_listen)
  * [onError](#proxy_onError)
+ * [onCertificateRequired](#proxy_onCertificateRequired)
  * [onRequest](#proxy_onRequest)
  * [onRequestData](#proxy_onRequestData)
  * [onResponse](#proxy_onResponse)
@@ -103,6 +104,27 @@ __Example__
     proxy.onError(function(ctx, err) {
       console.error('error in proxy for url:', ctx.clientToProxyRequest.url, err);
     });
+
+<a name="proxy_onCertificateRequired" />
+### proxy.onCertificateRequired = function(hostname, callback)
+
+Allows the default certificate name/path computation to be overwritten.
+
+The default behavior expects `{hostname}-key.pem` and `{hostname}-cert.pem` files to be at `self.sslCertCacheDir`.
+
+__Arguments__
+
+ * hostname - Requested hostname.
+ * callback - The function to be called when certificate files' path were already computed.
+
+__Example__
+
+    proxy.onCertificateRequired = function(hostname, callback) {
+      return callback(null, {
+        keyFile: path.resolve('/ca/certs/', hostname + '.key'),
+        certFile: path.resolve('/ca/certs/', hostname + '.crt')
+        });
+    };
 
 <a name="proxy_onRequest" />
 ### proxy.onRequest(fn) or ctx.onRequest(fn)
