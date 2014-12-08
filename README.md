@@ -52,6 +52,7 @@ Import ca/cacert.pem into the browser.
  * [listen](#proxy_listen)
  * [onError](#proxy_onError)
  * [onCertificateRequired](#proxy_onCertificateRequired)
+ * [onCertificateMissing](#proxy_onCertificateMissing)
  * [onRequest](#proxy_onRequest)
  * [onRequestData](#proxy_onRequestData)
  * [onResponse](#proxy_onResponse)
@@ -125,6 +126,36 @@ __Example__
         certFile: path.resolve('/ca/certs/', hostname + '.crt')
         });
     };
+
+<a name="proxy_onCertificateMissing" />
+### proxy.onCertificateMissing = function(ctx, files, callback)
+
+Allows you to handle missing certificate files for current request, for example, creating them on the fly.
+
+__Arguments__
+
+* ctx - Context with the following properties
+ * hostname - The hostname which requires certificates
+ * data.keyFileExists - Whether key file exists or not
+ * data.certFileExists - Whether certificate file exists or not
+* files - missing files names (`files.keyFile` and `files.certFile`)
+* callback - The function to be called to pass certificate data back (`keyFileData` and `certFileData`)
+
+__Example__
+
+    proxy.onCertificateMissing = function(ctx, files, callback) {
+      console.log('Looking for "%s" certificates',   ctx.hostname);
+      console.log('"%s" missing', ctx.files.keyFile);
+      console.log('"%s" missing', ctx.files.certFile);
+
+      // Here you have the last chance to provide certificate files data
+      // A tipical use case would be creating them on the fly
+      //
+      // return callback(null, {
+      //   key: keyFileData,
+      //   cert: certFileData
+      // });
+      };
 
 <a name="proxy_onRequest" />
 ### proxy.onRequest(fn) or ctx.onRequest(fn)
