@@ -40,7 +40,7 @@ openssl req -new -x509 -days 3650 -extensions v3_ca -keyout ca/cakey.pem -out ca
 echo "02" > ca/cacert.srl
 
 openssl genrsa -out www.google.com-key.pem 1024
-openssl req -new -key www.google.com-key.pem -out www.google.com.pem
+openssl req -new -key www.google.com-key.pem -out www.google.com.csr
 openssl x509 -req -days 3650 -CA ca/cacert.pem -CAkey ca/cakey.pem -in www.google.com.csr -out www.google.com-cert.pem
 ```
 
