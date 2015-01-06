@@ -234,6 +234,8 @@ __Example__
 
     proxy.use({
       onError: function(ctx, err) { },
+      onCertificateRequired: function(hostname, callback) { return callback(); },
+      onCertificateMissing: function(ctx, files, callback) { return callback(); },
       onRequest: function(ctx, callback) { return callback(); },
       onRequestData: function(ctx, chunk, callback) { return callback(null, chunk); },
       onResponse: function(ctx, callback) { return callback(); },
