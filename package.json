@@ -14,8 +14,9 @@
   "author": "Joe Ferner <joe@fernsroth.com>",
   "license": "MIT",
   "dependencies": {
-    "optimist": "~0.3.5",
     "async": "~0.1.22",
-    "mkdirps": "0.0.0"
+    "mkdirps": "0.0.0",
+    "node-forge": "^0.6.34",
+    "optimist": "~0.3.5"
   }
 }

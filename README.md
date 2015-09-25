@@ -32,19 +32,7 @@ proxy.listen({port: 8081});
 
 # SSL
 
-Create a CA
-```
-cd ~/.http-mitm-proxy
-openssl genrsa -out ca/ca.key 1024
-openssl req -new -x509 -days 3650 -extensions v3_ca -keyout ca/cakey.pem -out ca/cacert.pem -config /etc/ssl/openssl.cnf
-echo "02" > ca/cacert.srl
-
-openssl genrsa -out www.google.com-key.pem 1024
-openssl req -new -key www.google.com-key.pem -out www.google.com.csr
-openssl x509 -req -days 3650 -CA ca/cacert.pem -CAkey ca/cakey.pem -in www.google.com.csr -out www.google.com-cert.pem
-```
-
-Import ca/cacert.pem into the browser.
+Using node-forge allows the automatic generation of SSL certificates within the proxy. After running your app you will find options.sslCaDir + '/certs/ca.pem' which can be imported to your browser, phone, etc.
 
 # API
 
@@ -85,7 +73,7 @@ __Arguments__
 
  * options - An object with the following options:
   * port - The port to listen on (default: 8080).
-  * sslCertCacheDir - Path to the certificates cache directory (default: ~/.http-mitm-proxy)
+  * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
 
 __Example__
 
@@ -111,7 +99,7 @@ __Example__
 
 Allows the default certificate name/path computation to be overwritten.
 
-The default behavior expects `{hostname}-key.pem` and `{hostname}-cert.pem` files to be at `self.sslCertCacheDir`.
+The default behavior expects `keys/{hostname}.pem` and `certs/{hostname}.pem` files to be at `self.sslCaDir`.
 
 __Arguments__
 
@@ -152,8 +140,8 @@ __Example__
       // A tipical use case would be creating them on the fly
       //
       // return callback(null, {
-      //   key: keyFileData,
-      //   cert: certFileData
+      //   keyFileData: keyFileData,
+      //   certFileData: certFileData
       // });
       };
 
