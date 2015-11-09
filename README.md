@@ -259,7 +259,7 @@ __Example__
 
     ctx.addResponseFilter(zlib.createGunzip());
 
-
+# License
 
 ```
 Copyright (c) 2015 Joe Ferner
