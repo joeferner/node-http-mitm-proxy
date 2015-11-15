@@ -294,8 +294,9 @@ __Arguments__
 
 __Example__
 
-    proxy.onWebSocketClose(function(ctx) {
+    proxy.onWebSocketClose(function(ctx, callback) {
       console.log('Websocket connection closed by '+(ctx.closedByServer ? 'Server' : 'Client'));
+      callback();
     });
 
 <a name="proxy_use" />
@@ -321,7 +322,7 @@ __Example__
       onWebSocketSend: function(ctx, message, flags, callback) { return callback(null, message, flags); },
       onWebSocketMessage: function(ctx, message, flags, callback) { return callback(null, message, flags); },
       onWebSocketError: function(ctx, err) {  },
-      onWebSocketClose: function(ctx, callback) { return callback(null, chunk); },
+      onWebSocketClose: function(ctx, callback) {  },
     });
 
 <a name="context"/>
