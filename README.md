@@ -45,6 +45,11 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onRequestData](#proxy_onRequestData)
  * [onResponse](#proxy_onResponse)
  * [onResponseData](#proxy_onResponseData)
+ * [onWebSocketConnection](#proxy_onWebSocketConnection)
+ * [onWebSocketSend](#proxy_onWebSocketSend)
+ * [onWebSocketMessage](#proxy_onWebSocketMessage)
+ * [onWebSocketError](#proxy_onWebSocketError)
+ * [onWebSocketClose](#proxy_onWebSocketClose)
  * [use](#proxy_use)
 
 ## Context
@@ -59,6 +64,11 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onResponse](#proxy_onResponse)
  * [onResponseData](#proxy_onResponseData)
  * [addResponseFilter](#context_addResponseFilter)
+ * [onWebSocketConnection](#context_onWebSocketConnection)
+ * [onWebSocketSend](#context_onWebSocketSend)
+ * [onWebSocketMessage](#context_onWebSocketMessage)
+ * [onWebSocketError](#context_onWebSocketError)
+ * [onWebSocketClose](#context_onWebSocketClose)
  * [use](#proxy_use)
 
 <a name="proxy"/>
@@ -209,6 +219,85 @@ __Example__
       return callback(null, chunk);
     });
 
+<a name="proxy_onWebSocketConnection" />
+### proxy.onWebSocketConnection(fn) or ctx.onWebSocketConnection(fn)
+
+Adds a function to get called at the beginning of websocket connection
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets called for each data chunk.
+
+__Example__
+
+    proxy.onWebSocketConnection(function(ctx, callback) {
+      console.log('New websocket connection: ', ctx.proxyToServerWebSocket);
+      console.log('Will connect to the server with following options: ', ctx.proxyToServerWebSocketOptions);
+      return callback();
+    });
+
+<a name="proxy_onWebSocketSend" />
+### proxy.onWebSocketSend(fn) or ctx.onWebSocketSend(fn)
+
+Adds a function to get called for each WebSocket message sent by the client.
+
+__Arguments__
+
+ * fn(ctx, message, flags, callback) - The function that gets called  for each WebSocket message sent by the client.
+
+__Example__
+
+    proxy.onWebSocketSend(function(ctx, message, flags, callback) {
+      console.log('WebSocket message sent: ', message);
+      return callback(null, message, flags);
+    });
+
+<a name="proxy_onWebSocketMessage" />
+### proxy.onWebSocketMessage(fn) or ctx.onWebSocketMessage(fn)
+
+Adds a function to get called for each WebSocket message received from the server.
+
+__Arguments__
+
+ * fn(ctx, message, flags, callback) - The function that gets called for each WebSocket message received from the server.
+
+__Example__
+
+    proxy.onWebSocketMessage(function(ctx, message, flags, callback) {
+      console.log('WebSocket message received: ', message);
+      return callback(null, message, flags);
+    });
+
+<a name="proxy_onWebSocketError" />
+### proxy.onWebSocketError(fn) or ctx.onWebSocketError(fn)
+
+Adds a function to the list of functions to get called if an error occures in WebSocket.
+
+__Arguments__
+
+ * fn(ctx, err) - The function to be called on an error in WebSocket.
+
+__Example__
+
+    proxy.onWebSocketError(function(ctx, err) {
+      console.error('error in proxy for websocket:', ctx.clientToProxyWebSocket.url, err);
+    });
+ 
+<a name="proxy_onWebSocketClose" />
+### proxy.onWebSocketClose(fn) or ctx.onWebSocketClose(fn)
+
+Adds a function to get called when a WebSocket connection is closed
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets when a WebSocket is closed.
+
+__Example__
+
+    proxy.onWebSocketClose(function(ctx) {
+      console.log('Websocket connection closed by '+(ctx.closedByServer ? 'Server' : 'Client'));
+    });
+
 <a name="proxy_use" />
 ### proxy.use(module) or ctx.use(module)
 
@@ -227,7 +316,12 @@ __Example__
       onRequest: function(ctx, callback) { return callback(); },
       onRequestData: function(ctx, chunk, callback) { return callback(null, chunk); },
       onResponse: function(ctx, callback) { return callback(); },
-      onResponseData: function(ctx, chunk, callback) { return callback(null, chunk); }
+      onResponseData: function(ctx, chunk, callback) { return callback(null, chunk); },
+      onWebSocketConnection: function(ctx, callback) { return callback(); },
+      onWebSocketSend: function(ctx, message, flags, callback) { return callback(null, message, flags); },
+      onWebSocketMessage: function(ctx, message, flags, callback) { return callback(null, message, flags); },
+      onWebSocketError: function(ctx, err) {  },
+      onWebSocketClose: function(ctx, callback) { return callback(null, chunk); },
     });
 
 <a name="context"/>
