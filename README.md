@@ -64,11 +64,11 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onResponse](#proxy_onResponse)
  * [onResponseData](#proxy_onResponseData)
  * [addResponseFilter](#context_addResponseFilter)
- * [onWebSocketConnection](#context_onWebSocketConnection)
- * [onWebSocketSend](#context_onWebSocketSend)
- * [onWebSocketMessage](#context_onWebSocketMessage)
- * [onWebSocketError](#context_onWebSocketError)
- * [onWebSocketClose](#context_onWebSocketClose)
+ * [onWebSocketConnection](#proxy_onWebSocketConnection)
+ * [onWebSocketSend](#proxy_onWebSocketSend)
+ * [onWebSocketMessage](#proxy_onWebSocketMessage)
+ * [onWebSocketError](#proxy_onWebSocketError)
+ * [onWebSocketClose](#proxy_onWebSocketClose)
  * [use](#proxy_use)
 
 <a name="proxy"/>
