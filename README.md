@@ -231,8 +231,7 @@ __Arguments__
 __Example__
 
     proxy.onWebSocketConnection(function(ctx, callback) {
-      console.log('New websocket connection: ', ctx.proxyToServerWebSocket);
-      console.log('Will connect to the server with following options: ', ctx.proxyToServerWebSocketOptions);
+      console.log('WEBSOCKET CONNECT:', ctx.clientToProxyWebSocket.upgradeReq.url);
       return callback();
     });
 
@@ -248,7 +247,7 @@ __Arguments__
 __Example__
 
     proxy.onWebSocketSend(function(ctx, message, flags, callback) {
-      console.log('WebSocket message sent: ', message);
+      console.log('WEBSOCKET SEND:', ctx.clientToProxyWebSocket.upgradeReq.url, message);
       return callback(null, message, flags);
     });
 
@@ -264,7 +263,7 @@ __Arguments__
 __Example__
 
     proxy.onWebSocketMessage(function(ctx, message, flags, callback) {
-      console.log('WebSocket message received: ', message);
+      console.log('WEBSOCKET MESSAGE:', ctx.clientToProxyWebSocket.upgradeReq.url, message);
       return callback(null, message, flags);
     });
 
@@ -280,7 +279,7 @@ __Arguments__
 __Example__
 
     proxy.onWebSocketError(function(ctx, err) {
-      console.error('error in proxy for websocket:', ctx.clientToProxyWebSocket.url, err);
+      console.log('WEBSOCKET ERROR:', ctx.clientToProxyWebSocket.upgradeReq.url, err);
     });
  
 <a name="proxy_onWebSocketClose" />
@@ -290,13 +289,13 @@ Adds a function to get called when a WebSocket connection is closed
 
 __Arguments__
 
- * fn(ctx, callback) - The function that gets when a WebSocket is closed.
+ * fn(ctx, code, message, callback) - The function that gets when a WebSocket is closed.
 
 __Example__
 
-    proxy.onWebSocketClose(function(ctx, callback) {
-      console.log('Websocket connection closed by '+(ctx.closedByServer ? 'Server' : 'Client'));
-      callback();
+    proxy.onWebSocketClose(function(ctx, code, message, callback) {
+      console.log('WEBSOCKET CLOSED BY '+(ctx.closedByServer ? 'SERVER' : 'CLIENT'), ctx.clientToProxyWebSocket.upgradeReq.url, code, message);
+      callback(null, code, message);
     });
 
 <a name="proxy_use" />
@@ -322,7 +321,7 @@ __Example__
       onWebSocketSend: function(ctx, message, flags, callback) { return callback(null, message, flags); },
       onWebSocketMessage: function(ctx, message, flags, callback) { return callback(null, message, flags); },
       onWebSocketError: function(ctx, err) {  },
-      onWebSocketClose: function(ctx, callback) {  },
+      onWebSocketClose: function(ctx, code, message, callback) {  },
     });
 
 <a name="context"/>
