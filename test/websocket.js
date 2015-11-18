@@ -9,7 +9,7 @@ proxy.onError(function(ctx, err) {
   console.error('proxy error:', err);
 });
 proxy.onWebSocketConnection(function(ctx, callback) {
-    console.log('WEBSOCKET CONNECT:', ctx.clientToProxyWebSocket.upgradeReq.url);
+  console.log('WEBSOCKET CONNECT:', ctx.clientToProxyWebSocket.upgradeReq.url);
   return callback();
 });
 proxy.onWebSocketSend(function(ctx, message, flags, callback) {
