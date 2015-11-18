@@ -6,3 +6,4 @@ node_modules
 .lock*
 npm-debug.log
 .idea
+.http-mitm-proxy
