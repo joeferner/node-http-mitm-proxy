@@ -30,7 +30,7 @@ proxy.onRequest(function(ctx, callback) {
 proxy.listen({port: 8081});
 ```
 
-You can find more examples in the (test directory)[tree/master/test]
+You can find more examples in the [test directory](https://github.com/joeferner/node-http-mitm-proxy/tree/master/test)
 
 # SSL
 
