@@ -30,6 +30,8 @@ proxy.onRequest(function(ctx, callback) {
 proxy.listen({port: 8081});
 ```
 
+You can find more examples in the (test directory)[tree/master/test]
+
 # SSL
 
 Using node-forge allows the automatic generation of SSL certificates within the proxy. After running your app you will find options.sslCaDir + '/certs/ca.pem' which can be imported to your browser, phone, etc.
@@ -63,6 +65,7 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [addRequestFilter](#context_addRequestFilter)
  * [onResponse](#proxy_onResponse)
  * [onResponseData](#proxy_onResponseData)
+ * [onResponseEnd](#context_onResponseEnd)
  * [addResponseFilter](#context_addResponseFilter)
  * [onWebSocketConnection](#proxy_onWebSocketConnection)
  * [onWebSocketSend](#proxy_onWebSocketSend)
@@ -217,6 +220,22 @@ __Example__
     proxy.onResponseData(function(ctx, chunk, callback) {
       console.log('RESPONSE DATA:', chunk.toString());
       return callback(null, chunk);
+    });
+
+<a name="context_onResponseEnd" />
+### ctx.onResponseEnd(fn)
+
+Adds a function to get called when the proxy request to server as ended.
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets called when the proxy request to server as ended.
+
+__Example__
+
+    proxy.onResponseEnd(function(ctx, callback) {
+      console.log('RESPONSE END', chunk.toString());
+      return callback();
     });
 
 <a name="proxy_onWebSocketConnection" />
