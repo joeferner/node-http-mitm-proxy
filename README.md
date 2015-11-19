@@ -39,40 +39,54 @@ Using node-forge allows the automatic generation of SSL certificates within the 
 # API
 
 ## Proxy
- * [listen](#proxy_listen)
- * [onError](#proxy_onError)
+ * [listen(options)](#proxy_listen)
+ * [onError(fn)](#proxy_onError)
  * [onCertificateRequired](#proxy_onCertificateRequired)
  * [onCertificateMissing](#proxy_onCertificateMissing)
- * [onRequest](#proxy_onRequest)
- * [onRequestData](#proxy_onRequestData)
- * [onResponse](#proxy_onResponse)
- * [onResponseData](#proxy_onResponseData)
- * [onWebSocketConnection](#proxy_onWebSocketConnection)
- * [onWebSocketSend](#proxy_onWebSocketSend)
- * [onWebSocketMessage](#proxy_onWebSocketMessage)
- * [onWebSocketError](#proxy_onWebSocketError)
- * [onWebSocketClose](#proxy_onWebSocketClose)
- * [use](#proxy_use)
+ * [onRequest(fn)](#proxy_onRequest)
+ * [onRequestData(fn)](#proxy_onRequestData)
+ * [onResponse(fn)](#proxy_onResponse)
+ * [onResponseData(fn)](#proxy_onResponseData)
+ * [onWebSocketConnection(fn)](#proxy_onWebSocketConnection)
+ * [onWebSocketSend(fn)](#proxy_onWebSocketSend)
+ * [onWebSocketMessage(fn)](#proxy_onWebSocketMessage)
+ * [onWebSocketError(fn)](#proxy_onWebSocketError)
+ * [onWebSocketClose(fn)](#proxy_onWebSocketClose)
+ * [use(fn)](#proxy_use)
 
 ## Context
 
  Context functions only effect the current request/response. For example you may only want to gunzip requests
  made to a particular host.
 
- * [onError](#proxy_onError)
- * [onRequest](#proxy_onRequest)
- * [onRequestData](#proxy_onRequestData)
- * [addRequestFilter](#context_addRequestFilter)
- * [onResponse](#proxy_onResponse)
- * [onResponseData](#proxy_onResponseData)
- * [onResponseEnd](#context_onResponseEnd)
- * [addResponseFilter](#context_addResponseFilter)
- * [onWebSocketConnection](#proxy_onWebSocketConnection)
- * [onWebSocketSend](#proxy_onWebSocketSend)
- * [onWebSocketMessage](#proxy_onWebSocketMessage)
- * [onWebSocketError](#proxy_onWebSocketError)
- * [onWebSocketClose](#proxy_onWebSocketClose)
- * [use](#proxy_use)
+ * isSSL: boolean,
+ * clientToProxyRequest: [IncomingMessage](https://nodejs.org/api/http.html#http_http_incomingmessage),
+ * proxyToClientResponse: [ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse),
+ * proxyToServerRequest: [ClientRequest](https://nodejs.org/api/http.html#http_class_http_clientrequest),
+ * serverToProxyResponse: [ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse),
+ * [onError(fn)](#proxy_onError)
+ * [onRequest(fn)](#proxy_onRequest)
+ * [onRequestData(fn)](#proxy_onRequestData)
+ * [addRequestFilter(fn)](#context_addRequestFilter)
+ * [onResponse(fn)](#proxy_onResponse)
+ * [onResponseData(fn)](#proxy_onResponseData)
+ * [onResponseEnd(fn)](#context_onResponseEnd)
+ * [addResponseFilter(fn)](#context_addResponseFilter)
+ * [use(mod)](#proxy_use)
+
+## WebSocket Context
+
+The context available in websocket handlers is a bit different
+
+ * isSSL: boolean,
+ * clientToProxyWebSocket: [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-wswebsocket),
+ * proxyToServerWebSocket: [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-wswebsocket),
+ * [onWebSocketConnection(fn)](#proxy_onWebSocketConnection)
+ * [onWebSocketSend(fn)](#proxy_onWebSocketSend)
+ * [onWebSocketMessage(fn)](#proxy_onWebSocketMessage)
+ * [onWebSocketError(fn)](#proxy_onWebSocketError)
+ * [onWebSocketClose(fn)](#proxy_onWebSocketClose)
+ * [use(mod)](#proxy_use)
 
 <a name="proxy"/>
 ## Proxy
