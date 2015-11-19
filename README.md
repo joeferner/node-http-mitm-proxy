@@ -236,22 +236,6 @@ __Example__
       return callback(null, chunk);
     });
 
-<a name="context_onResponseEnd" />
-### ctx.onResponseEnd(fn)
-
-Adds a function to get called when the proxy request to server as ended.
-
-__Arguments__
-
- * fn(ctx, callback) - The function that gets called when the proxy request to server as ended.
-
-__Example__
-
-    proxy.onResponseEnd(function(ctx, callback) {
-      console.log('RESPONSE END', chunk.toString());
-      return callback();
-    });
-
 <a name="proxy_onWebSocketConnection" />
 ### proxy.onWebSocketConnection(fn) or ctx.onWebSocketConnection(fn)
 
@@ -385,6 +369,22 @@ __Arguments__
 __Example__
 
     ctx.addResponseFilter(zlib.createGunzip());
+
+<a name="context_onResponseEnd" />
+### ctx.onResponseEnd(fn)
+
+Adds a function to get called when the proxy request to server as ended.
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets called when the proxy request to server as ended.
+
+__Example__
+
+    proxy.onResponseEnd(function(ctx, callback) {
+      console.log('RESPONSE END', chunk.toString());
+      return callback();
+    });
 
 # License
 
