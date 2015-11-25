@@ -2,6 +2,10 @@
 
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
+# Install
+
+`npm install --save http-mitm-proxy`
+
 # Example
 
 This example will modify any search results coming from google and replace all the result titles with "Pwned!".
