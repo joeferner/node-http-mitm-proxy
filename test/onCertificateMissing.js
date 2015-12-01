@@ -6,8 +6,10 @@ var path = require('path');
 var Proxy = require('../');
 var proxy = Proxy();
 
-proxy.onError(function(ctx, err) {
-  console.error('proxy error:', err);
+proxy.onError(function(ctx, err, errorKind) {
+  // ctx may be null
+  var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : "";
+  console.error(errorKind + ' on ' + url + ':', err);
 });
 
 proxy.onCertificateMissing = function(ctx, files, callback) {
