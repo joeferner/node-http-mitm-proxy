@@ -105,6 +105,7 @@ __Arguments__
  * options - An object with the following options:
   * port - The port to listen on (default: 8080).
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
+  * silent - if set to true, nothing will be written to console (default: false)
 
 __Example__
 
