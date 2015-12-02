@@ -21,7 +21,11 @@ if (args.help) {
 
 var proxy = require('../lib/proxy')();
 proxy.onError(function(ctx, err) {
-  console.error('proxy error:', err);
+  if (!args.silent) {
+    console.error('proxy error:', err);
+  }
 });
 proxy.listen(args);
-console.log('proxy listening on ' + args.port);
+if (!args.silent) {
+  console.log('proxy listening on ' + args.port);
+}
