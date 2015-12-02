@@ -105,6 +105,7 @@ __Arguments__
  * options - An object with the following options:
   * port - The port to listen on (default: 8080).
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
+  * silent - if set to true, nothing will be written to console (default: false)
 
 __Example__
 
@@ -117,12 +118,14 @@ Adds a function to the list of functions to get called if an error occures.
 
 __Arguments__
 
- * fn(ctx, err) - The function to be called on an error.
+ * fn(ctx, err, errorKind) - The function to be called on an error.
 
 __Example__
 
-    proxy.onError(function(ctx, err) {
-      console.error('error in proxy for url:', ctx.clientToProxyRequest.url, err);
+    proxy.onError(function(ctx, err, errorKind) {
+      // ctx may be null
+      var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : "";
+      console.error(errorKind + ' on ' + url + ':', err);
     });
 
 <a name="proxy_onCertificateRequired" />
