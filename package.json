@@ -12,6 +12,9 @@
     "proxy"
   ],
   "author": "Joe Ferner <joe@fernsroth.com>",
+  "contributors": [
+    "Félicien François <felicien@tweakstyle.com>"
+  ],
   "license": "MIT",
   "dependencies": {
     "async": "^1.5.0",
