@@ -14,10 +14,10 @@
   "author": "Joe Ferner <joe@fernsroth.com>",
   "license": "MIT",
   "dependencies": {
-    "async": "~0.1.22",
+    "async": "^1.5.0",
     "mkdirps": "0.0.0",
-    "node-forge": "^0.6.34",
-    "optimist": "~0.3.5",
-    "ws": "^0.8.0"
+    "node-forge": "^0.6.38",
+    "optimist": "^0.6.1",
+    "ws": "^0.8.1"
   }
 }
