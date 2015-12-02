@@ -7,8 +7,18 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",
+  "bugs": {
+    "url" : "https://github.com/joeferner/node-http-mitm-proxy/issues",
+  },
+  "bin": {
+    "http-mitm-proxy": "./bin/mitm-proxy.js"
+  },
   "keywords": [
     "mitm",
+    "http",
+    "https",
+    "ssl",
+    "websocket",
     "proxy"
   ],
   "author": "Joe Ferner <joe@fernsroth.com>",
