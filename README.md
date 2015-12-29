@@ -49,8 +49,10 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onCertificateMissing](#proxy_onCertificateMissing)
  * [onRequest(fn)](#proxy_onRequest)
  * [onRequestData(fn)](#proxy_onRequestData)
+ * [onRequestEnd(fn)](#proxy_onRequestEnd)
  * [onResponse(fn)](#proxy_onResponse)
  * [onResponseData(fn)](#proxy_onResponseData)
+ * [onResponseEnd(fn)](#proxy_onResponseEnd)
  * [onWebSocketConnection(fn)](#proxy_onWebSocketConnection)
  * [onWebSocketSend(fn)](#proxy_onWebSocketSend)
  * [onWebSocketMessage(fn)](#proxy_onWebSocketMessage)
@@ -71,10 +73,11 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onError(fn)](#proxy_onError)
  * [onRequest(fn)](#proxy_onRequest)
  * [onRequestData(fn)](#proxy_onRequestData)
+ * [onRequestEnd(fn)](#proxy_onRequestEnd)
  * [addRequestFilter(fn)](#context_addRequestFilter)
  * [onResponse(fn)](#proxy_onResponse)
  * [onResponseData(fn)](#proxy_onResponseData)
- * [onResponseEnd(fn)](#context_onResponseEnd)
+ * [onResponseEnd(fn)](#proxy_onResponseEnd)
  * [addResponseFilter(fn)](#context_addResponseFilter)
  * [use(mod)](#proxy_use)
 
@@ -211,6 +214,29 @@ __Example__
       return callback(null, chunk);
     });
 
+<a name="proxy_onRequestEnd" />
+### proxy.onRequestEnd(fn) or ctx.onRequestEnd(fn)
+
+Adds a function to get called when all request data (the body) was sent.
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets called when all request data (the body) was sent.
+
+__Example__
+
+    var chunks = [];
+    
+    proxy.onRequestData(function(ctx, chunk, callback) {
+      chunks.push(chunk);
+      return callback(null, chunk);
+    });
+
+    proxy.onRequestEnd(function(ctx, callback) {
+      console.log('REQUEST END', (Buffer.concat(chunks)).toString());
+      return callback();
+    });
+
 <a name="proxy_onResponse" />
 ### proxy.onResponse(fn) or ctx.onResponse(fn)
 
@@ -241,6 +267,22 @@ __Example__
     proxy.onResponseData(function(ctx, chunk, callback) {
       console.log('RESPONSE DATA:', chunk.toString());
       return callback(null, chunk);
+    });
+
+<a name="proxy_onResponseEnd" />
+### proxy.onResponseEnd(fn) or ctx.onResponseEnd(fn)
+
+Adds a function to get called when the proxy request to server has ended.
+
+__Arguments__
+
+ * fn(ctx, callback) - The function that gets called when the proxy request to server as ended.
+
+__Example__
+
+    proxy.onResponseEnd(function(ctx, callback) {
+      console.log('RESPONSE END', chunk.toString());
+      return callback();
     });
 
 <a name="proxy_onWebSocketConnection" />
@@ -376,22 +418,6 @@ __Arguments__
 __Example__
 
     ctx.addResponseFilter(zlib.createGunzip());
-
-<a name="context_onResponseEnd" />
-### ctx.onResponseEnd(fn)
-
-Adds a function to get called when the proxy request to server as ended.
-
-__Arguments__
-
- * fn(ctx, callback) - The function that gets called when the proxy request to server as ended.
-
-__Example__
-
-    proxy.onResponseEnd(function(ctx, callback) {
-      console.log('RESPONSE END', chunk.toString());
-      return callback();
-    });
 
 # License
 
