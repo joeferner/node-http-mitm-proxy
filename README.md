@@ -44,6 +44,7 @@ Using node-forge allows the automatic generation of SSL certificates within the 
 
 ## Proxy
  * [listen(options)](#proxy_listen)
+ * [close](#proxy_close)
  * [onError(fn)](#proxy_onError)
  * [onCertificateRequired](#proxy_onCertificateRequired)
  * [onCertificateMissing](#proxy_onCertificateMissing)
@@ -113,6 +114,15 @@ __Arguments__
 __Example__
 
     proxy.listen({ port: 80 });
+
+<a name="proxy_close" />
+### proxy.close
+
+Stops the proxy listening.
+
+__Example__
+
+    proxy.close();
 
 <a name="proxy_onError" />
 ### proxy.onError(fn) or ctx.onError(fn)
