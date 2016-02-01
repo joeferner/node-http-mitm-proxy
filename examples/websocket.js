@@ -14,15 +14,10 @@ proxy.onWebSocketConnection(function(ctx, callback) {
   console.log('WEBSOCKET CONNECT:', ctx.clientToProxyWebSocket.upgradeReq.url);
   return callback();
 });
-proxy.onWebSocketSend(function(ctx, message, flags, callback) {
-  console.log('WEBSOCKET SEND:', ctx.clientToProxyWebSocket.upgradeReq.url, message);
-  var hackedMessage = message.replace(/Rock it/ig, "Hack it");
-  return callback(null, hackedMessage, flags);
-});
-proxy.onWebSocketMessage(function(ctx, message, flags, callback) {
-  console.log('WEBSOCKET MESSAGE ', ctx.clientToProxyWebSocket.upgradeReq.url, message);
-  var hackedMessage = message.replace(/Rock it/ig, "Hack it");
-  return callback(null, hackedMessage, flags);
+proxy.onWebSocketFrame(function(ctx, type, fromServer, message, flags, callback) {
+  console.log('WEBSOCKET FRAME ' + type + ' received from ' + (fromServer ? 'server' : 'client'), ctx.clientToProxyWebSocket.upgradeReq.url, message);
+  if (message) var hackedMessage = message.replace(/Rock it/ig, "Hack it");
+  return callback(null, message, flags);
 });
 proxy.onWebSocketError(function(ctx, err) {
   console.log('WEBSOCKET ERROR ', ctx.clientToProxyWebSocket.upgradeReq.url, err);

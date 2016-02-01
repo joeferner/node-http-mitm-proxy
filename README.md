@@ -57,6 +57,7 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * [onWebSocketConnection(fn)](#proxy_onWebSocketConnection)
  * [onWebSocketSend(fn)](#proxy_onWebSocketSend)
  * [onWebSocketMessage(fn)](#proxy_onWebSocketMessage)
+ * [onWebSocketFrame(fn)](#proxy_onWebSocketFrame)
  * [onWebSocketError(fn)](#proxy_onWebSocketError)
  * [onWebSocketClose(fn)](#proxy_onWebSocketClose)
  * [use(fn)](#proxy_use)
@@ -92,6 +93,7 @@ The context available in websocket handlers is a bit different
  * [onWebSocketConnection(fn)](#proxy_onWebSocketConnection)
  * [onWebSocketSend(fn)](#proxy_onWebSocketSend)
  * [onWebSocketMessage(fn)](#proxy_onWebSocketMessage)
+ * [onWebSocketFrame(fn)](#proxy_onWebSocketFrame)
  * [onWebSocketError(fn)](#proxy_onWebSocketError)
  * [onWebSocketClose(fn)](#proxy_onWebSocketClose)
  * [use(mod)](#proxy_use)
@@ -340,6 +342,22 @@ __Example__
 
     proxy.onWebSocketMessage(function(ctx, message, flags, callback) {
       console.log('WEBSOCKET MESSAGE:', ctx.clientToProxyWebSocket.upgradeReq.url, message);
+      return callback(null, message, flags);
+    });
+
+<a name="proxy_onWebSocketFrame" />
+### proxy.onWebSocketFrame(fn) or ctx.onWebSocketFrame(fn)
+
+Adds a function to get called for each WebSocket frame exchanged (`message`, `ping` or `pong`).
+
+__Arguments__
+
+ * fn(ctx, type, fromServer, data, flags, callback) - The function that gets called for each WebSocket frame exchanged.
+
+__Example__
+
+    proxy.onWebSocketFrame(function(ctx, type, fromServer, data, flags, callback) {
+      console.log('WEBSOCKET FRAME ' + type + ' received from ' + (fromServer ? 'server' : 'client'), ctx.clientToProxyWebSocket.upgradeReq.url, message);
       return callback(null, message, flags);
     });
 
