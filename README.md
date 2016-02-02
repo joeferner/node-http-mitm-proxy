@@ -110,6 +110,7 @@ __Arguments__
   * port - The port to listen on (default: 8080).
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * silent - if set to true, nothing will be written to console (default: false)
+  * timeout - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout.
 
 __Example__
 
