@@ -7,7 +7,7 @@ var proxy = Proxy();
 
 proxy.onError(function(ctx, err, errorKind) {
   // ctx may be null
-  var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : "";
+  var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
   console.error(errorKind + ' on ' + url + ':', err);
 });
 proxy.onWebSocketConnection(function(ctx, callback) {
@@ -16,7 +16,7 @@ proxy.onWebSocketConnection(function(ctx, callback) {
 });
 proxy.onWebSocketFrame(function(ctx, type, fromServer, message, flags, callback) {
   console.log('WEBSOCKET FRAME ' + type + ' received from ' + (fromServer ? 'server' : 'client'), ctx.clientToProxyWebSocket.upgradeReq.url, message);
-  if (message) var hackedMessage = message.replace(/Rock it/ig, "Hack it");
+  if (message) var hackedMessage = message.replace(/Rock it/ig, 'Hack it');
   return callback(null, message, flags);
 });
 proxy.onWebSocketError(function(ctx, err) {

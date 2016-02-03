@@ -7,7 +7,7 @@ var proxy = Proxy();
 
 proxy.onError(function(ctx, err, errorKind) {
   // ctx may be null
-  var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : "";
+  var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
   console.error(errorKind + ' on ' + url + ':', err);
 });
 
@@ -21,8 +21,8 @@ proxy.onRequest(function(ctx, callback) {
   });
   ctx.onResponseEnd(function(ctx, callback) {
     var body = Buffer.concat(chunks);
-    if(ctx.serverToProxyResponse.headers["content-type"] && ctx.serverToProxyResponse.headers["content-type"].indexOf("text/html") === 0) {
-      body = body.toString().replace(/Lucky/g, "Sexy");
+    if(ctx.serverToProxyResponse.headers['content-type'] && ctx.serverToProxyResponse.headers['content-type'].indexOf('text/html') === 0) {
+      body = body.toString().replace(/Lucky/g, 'Sexy');
     }
     ctx.proxyToClientResponse.write(body);
     return callback();
