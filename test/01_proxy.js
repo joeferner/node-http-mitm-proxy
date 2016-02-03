@@ -111,8 +111,8 @@ describe('proxy', function () {
         getHttp(testUrlA + '/1024', function (err, resp, body) {
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
-          assert.equal(1024, len, "body length is 1024");
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), "sha256 hash matches");
+          assert.equal(1024, len, 'body length is 1024');
+          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
           done();
         });
       });
@@ -120,8 +120,8 @@ describe('proxy', function () {
         getHttp(testUrlB + '/1024', function (err, resp, body) {
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
-          assert.equal(1024, len, "body length is 1024");
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), "sha256 hash matches");
+          assert.equal(1024, len, 'body length is 1024');
+          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
           done();
         });
       });
