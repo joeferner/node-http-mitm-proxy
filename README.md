@@ -115,6 +115,8 @@ __Arguments__
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * silent - if set to true, nothing will be written to console (default: false)
   * timeout - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout.
+  * httpAgent - The [http.Agent](https://nodejs.org/api/http.html#http_class_http_agent) to use when making http requests. Useful for chaining proxys. Defaults to an internal Agent.
+  * httpsAgent - The [https.Agent](https://nodejs.org/api/https.html#https_class_https_agent) to use when making https requests. Useful for chaining proxys. Defaults to an internal Agent.
 
 __Example__
 
