@@ -161,14 +161,25 @@ __Arguments__
  * hostname - Requested hostname.
  * callback - The function to be called when certificate files' path were already computed.
 
-__Example__
+__Example 1__
 
     proxy.onCertificateRequired = function(hostname, callback) {
       return callback(null, {
         keyFile: path.resolve('/ca/certs/', hostname + '.key'),
         certFile: path.resolve('/ca/certs/', hostname + '.crt')
-        });
+      });
     };
+
+__Example 2: Wilcard certificates__
+
+    proxy.onCertificateRequired = function(hostname, callback) {
+      return callback(null, {
+        keyFile: path.resolve('/ca/certs/', hostname + '.key'),
+        certFile: path.resolve('/ca/certs/', hostname + '.crt'),
+        hosts: ["*.mydomain.com"]
+      });
+    };
+
 
 <a name="proxy_onCertificateMissing" />
 ### proxy.onCertificateMissing = function(ctx, files, callback)
@@ -184,7 +195,7 @@ __Arguments__
 * files - missing files names (`files.keyFile` and `files.certFile`)
 * callback - The function to be called to pass certificate data back (`keyFileData` and `certFileData`)
 
-__Example__
+__Example 1__
 
     proxy.onCertificateMissing = function(ctx, files, callback) {
       console.log('Looking for "%s" certificates',   ctx.hostname);
@@ -199,6 +210,17 @@ __Example__
       //   certFileData: certFileData
       // });
       };
+
+__Example 2: Wilcard certificates__
+
+    proxy.onCertificateMissing = function(ctx, files, callback) {
+      return callback(null, {
+        keyFileData: keyFileData,
+        certFileData: certFileData,
+        hosts: ["*.mydomain.com"]
+      });
+    };
+
 
 <a name="proxy_onRequest" />
 ### proxy.onRequest(fn) or ctx.onRequest(fn)
