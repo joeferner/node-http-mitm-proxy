@@ -192,7 +192,7 @@ __Arguments__
  * hostname - The hostname which requires certificates
  * data.keyFileExists - Whether key file exists or not
  * data.certFileExists - Whether certificate file exists or not
-* files - missing files names (`files.keyFile` and `files.certFile`)
+* files - missing files names (`files.keyFile`, `files.certFile` and optional `files.hosts`)
 * callback - The function to be called to pass certificate data back (`keyFileData` and `certFileData`)
 
 __Example 1__
