@@ -36,6 +36,7 @@
     "mkdirps": "0.0.0",
     "node-forge": "^0.6.38",
     "optimist": "^0.6.1",
+    "semaphore": "^1.0.5",
     "ws": "^1.0.1"
   }
 }
