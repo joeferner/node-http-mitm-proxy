@@ -446,6 +446,10 @@ __Example__
       onWebSocketClose: function(ctx, code, message, callback) {  },
     });
 
+node-http-mitm-proxy provide some ready to use modules:
+- `Proxy.gunzip` Gunzip response filter (uncompress gzipped content before onResponseData and compress back after)
+- `Proxy.wildcard` Generates wilcard certificates by default (so less certificates are generated)
+
 <a name="context"/>
 ## Context
 
