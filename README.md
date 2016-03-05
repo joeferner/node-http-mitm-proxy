@@ -111,13 +111,15 @@ Starts the proxy listening on the given port.
 __Arguments__
 
  * options - An object with the following options:
-  * port - The port to listen on (default: 8080).
+  * port - The port or named socket to listen on (default: 8080).
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * silent - if set to true, nothing will be written to console (default: false)
   * timeout - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout.
   * httpAgent - The [http.Agent](https://nodejs.org/api/http.html#http_class_http_agent) to use when making http requests. Useful for chaining proxys. (default: internal Agent)
   * httpsAgent - The [https.Agent](https://nodejs.org/api/https.html#https_class_https_agent) to use when making https requests. Useful for chaining proxys. (default: internal Agent)
   * forceSNI - force use of [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication) by the client. Allow node-http-mitm-proxy to handle all HTTPS requests with a single internal server.
+  * httpsPort - The port or named socket for https server to listen on. _(forceSNI must be enabled)_
+  * useNamedSocket - use named socket (i.e. unix socket or named pipe) instead of TCP ports for internal server(s)
 
 __Example__
 
