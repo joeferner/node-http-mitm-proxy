@@ -18,14 +18,14 @@ var testUrlA = 'http://' + testHost + ':' + testPortA;
 var testUrlB = 'http://' + testHost + ':' + testPortB;
 
 var getHttp = function (url, cb) {
-  request({ url: url }, function (err, body, resp) {
-    cb(err, body, resp);
+  request({ url: url }, function (err, resp, body) {
+    cb(err, resp, body);
   });
 };
 
 var proxyHttp = function (url, cb) {
-  request({ url: url, proxy: 'http://127.0.0.1:' + testProxyPort, ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem') }, function (err, body, resp) {
-    cb(err, body, resp);
+  request({ url: url, proxy: 'http://127.0.0.1:' + testProxyPort, ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem') }, function (err, resp, body) {
+	cb(err, resp, body);
   });
 };
 
@@ -72,14 +72,11 @@ describe('proxy', function () {
   
   beforeEach(function (done) {
     proxy = new Proxy();
-    proxy.listen({ port: testProxyPort, silent: true });
-    setTimeout(function () {
-      done();
-    }, 15);
+    proxy.listen({ port: testProxyPort }, done);
   });
   
   afterEach(function () {
-    proxy.httpServer.close();
+    proxy.close();
     proxy = null;
   });
   
@@ -133,6 +130,7 @@ describe('proxy', function () {
     describe('proxy a 1024 byte file', function () {
       it('a', function (done) {
         proxyHttp(testUrlA + '/1024', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
@@ -142,7 +140,7 @@ describe('proxy', function () {
       });
       it('b', function (done) {
         proxyHttp(testUrlB + '/1024', function (err, resp, body) {
-          if (err) console.log('proxyHttpB Error: ' + err.toString());
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
@@ -154,7 +152,7 @@ describe('proxy', function () {
     describe('ssl', function () {
       it('proxys to google.com using local ca file', function (done) {
         proxyHttp('https://www.google.com/', function (err, resp, body) {
-          if (err) console.log('Error: ' + err.toString());
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
@@ -185,6 +183,7 @@ describe('proxy', function () {
         });
       
         proxyHttp(testUrlA + '/1024', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
