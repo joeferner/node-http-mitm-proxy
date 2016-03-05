@@ -72,7 +72,7 @@ describe('proxy', function () {
   
   beforeEach(function (done) {
     proxy = new Proxy();
-    proxy.listen({ port: testProxyPort }, done);
+    proxy.listen({ port: testProxyPort, silent: true }, done);
   });
   
   afterEach(function () {
