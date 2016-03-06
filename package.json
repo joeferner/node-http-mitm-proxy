@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "async": "^1.5.2",
+    "http2": "felicienfrancois/node-http2",
     "mkdirps": "0.0.0",
     "node-forge": "^0.6.38",
     "optimist": "^0.6.1",
