@@ -1,6 +1,6 @@
 {
   "name": "http-mitm-proxy",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "HTTP Man In The Middle (MITM) Proxy",
   "main": "index.js",
   "scripts": {
