@@ -45,7 +45,7 @@ var countString = function (str, substr, cb) {
 };
 
 describe('proxy', function () {
-  this.timeout(5000);
+  this.timeout(30000);
   var srvA = null;
   var srvB = null;
   var proxy = null;
