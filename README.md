@@ -122,7 +122,6 @@ __Arguments__
   * httpsAgent - The [https.Agent](https://nodejs.org/api/https.html#https_class_https_agent) to use when making https requests. Useful for chaining proxys. (default: internal Agent)
   * forceSNI - force use of [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication) by the client. Allow node-http-mitm-proxy to handle all HTTPS requests with a single internal server.
   * httpsPort - The port or named socket for https server to listen on. _(forceSNI must be enabled)_
-  * useNamedSocket - use named socket (i.e. unix socket or named pipe) instead of TCP ports for internal server(s)
 
 __Example__
 
