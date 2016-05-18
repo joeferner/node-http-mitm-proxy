@@ -28,7 +28,7 @@
   "license": "MIT",
   "devDependencies": {
     "mocha": "^2.4.5",
-    "request": "^2.69.0",
+    "request": "^2.72.0",
     "node-static": "^0.7.7"
   },
   "dependencies": {
@@ -37,6 +37,6 @@
     "node-forge": "^0.6.38",
     "optimist": "^0.6.1",
     "semaphore": "^1.0.5",
-    "ws": "^1.0.1"
+    "ws": "^1.1.0"
   }
 }
