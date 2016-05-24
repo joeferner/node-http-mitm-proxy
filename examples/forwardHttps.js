@@ -26,7 +26,7 @@ proxy.onConnect(function(req, socket, head) {
 proxy.listen({ port }, function() {
   console.log('Proxy server listening on ' + port);
 
-  var cmd = `curl -x http://localhost:${port} https://github.com/ | grep html`;
+  var cmd = `curl -x https://localhost:${port} https://github.com/ | grep html`;
   console.log('> ' + cmd);
   require('child_process').exec(cmd, function (error, stdout, stderr) {
     if (error) {
