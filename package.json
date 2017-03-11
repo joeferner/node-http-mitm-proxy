@@ -34,7 +34,7 @@
   "dependencies": {
     "async": "^1.5.2",
     "mkdirp": "^0.5.1",
-    "node-forge": "^0.6.44",
+    "node-forge": "^0.7.0",
     "optimist": "^0.6.1",
     "semaphore": "^1.0.5",
     "ws": "^1.1.1"
