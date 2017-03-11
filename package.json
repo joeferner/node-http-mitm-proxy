@@ -32,7 +32,7 @@
     "node-static": "^0.7.9"
   },
   "dependencies": {
-    "async": "^1.5.2",
+    "async": "^2.1.5",
     "mkdirp": "^0.5.1",
     "node-forge": "^0.7.0",
     "optimist": "^0.6.1",
