@@ -1,6 +1,6 @@
 {
   "name": "http-mitm-proxy",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "HTTP Man In The Middle (MITM) Proxy",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,8 @@
   ],
   "author": "Joe Ferner <joe@fernsroth.com>",
   "contributors": [
-    "Félicien François <felicien@tweakstyle.com>"
+    "Félicien François <felicien@tweakstyle.com>",
+    "Simon Pratt <simon@pr4tt.com>"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -32,11 +33,11 @@
     "node-static": "^0.7.9"
   },
   "dependencies": {
-    "async": "^1.5.2",
+    "async": "^2.1.5",
     "mkdirp": "^0.5.1",
-    "node-forge": "^0.6.44",
+    "node-forge": "^0.7.0",
     "optimist": "^0.6.1",
     "semaphore": "^1.0.5",
-    "ws": "^1.1.1"
+    "ws": "^2.2.0"
   }
 }
