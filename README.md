@@ -114,6 +114,7 @@ __Arguments__
 
  * options - An object with the following options:
   * port - The port or named socket to listen on (default: 8080).
+  * host - The hostname or local address to listen on.
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * silent - if set to true, nothing will be written to console (default: false)
   * keepAlive - enable [HTTP persistent connection](https://en.wikipedia.org/wiki/HTTP_persistent_connection)

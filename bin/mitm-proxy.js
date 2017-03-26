@@ -12,6 +12,9 @@ var args = optimist
     describe: 'HTTP Port.'
   })
   .alias('p', 'port')
+  .options('host', {
+    describe: 'HTTP Listen Interface.'
+  })
   .argv;
 
 if (args.help) {

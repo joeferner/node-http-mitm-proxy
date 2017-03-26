@@ -7,16 +7,16 @@ var Proxy = require('../');
 var proxy = Proxy();
 
 proxy.onConnect(function(req, socket, head) {
-  var host = req.url.split(":")[0]
-  var port = req.url.split(":")[1]
+  var host = req.url.split(":")[0];
+  var port = req.url.split(":")[1];
 
-  console.log('Tunnel to', req.url)
+  console.log('Tunnel to', req.url);
   var conn = net.connect(port, host, function(){
     socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function(){
       conn.pipe(socket);
       socket.pipe(conn);
     })
-  })
+  });
 
   conn.on("error",function(e){
     console.log('Tunnel error', e);
