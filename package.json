@@ -3,6 +3,7 @@
   "version": "0.5.2",
   "description": "HTTP Man In The Middle (MITM) Proxy",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "mocha"
   },
