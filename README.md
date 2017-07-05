@@ -329,7 +329,7 @@ __Arguments__
 __Example__
 
     proxy.onResponseEnd(function(ctx, callback) {
-      console.log('RESPONSE END', chunk.toString());
+      console.log('RESPONSE END');
       return callback();
     });
 
