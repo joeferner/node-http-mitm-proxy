@@ -29,16 +29,16 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "mocha": "^3.1.2",
-    "request": "^2.75.0",
-    "node-static": "^0.7.9"
+    "mocha": "^4.0.1",
+    "request": "^2.83.0",
+    "node-static": "^0.7.10"
   },
   "dependencies": {
-    "async": "^2.1.5",
+    "async": "^2.5.0",
     "mkdirp": "^0.5.1",
-    "node-forge": "^0.7.0",
+    "node-forge": "^0.7.1",
     "optimist": "^0.6.1",
-    "semaphore": "^1.0.5",
-    "ws": "^2.2.0"
+    "semaphore": "^1.1.0",
+    "ws": "^3.2.0"
   }
 }
