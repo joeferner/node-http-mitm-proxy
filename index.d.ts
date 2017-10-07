@@ -33,8 +33,10 @@
          httpsAgent?: https.Agent;
          /** - force use of SNI by the client. Allow node-http-mitm-proxy to handle all HTTPS requests with a single internal server. */
          forceSNI?: boolean;
-         /**  - The port or named socket for https server to listen on. (forceSNI must be enabled) */
+         /** - The port or named socket for https server to listen on. (forceSNI must be enabled) */
          httpsPort?: number;
+         /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
+         forceChunkedRequest?: boolean;
      }
 
      export type IProxy = ICallbacks & {
