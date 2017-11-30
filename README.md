@@ -106,9 +106,11 @@ The context available in websocket handlers is a bit different
  * [use(mod)](#proxy_use)
 
 <a name="proxy"/>
+
 ## Proxy
 
 <a name="proxy_listen" />
+
 ### proxy.listen
 
 Starts the proxy listening on the given port.
@@ -133,6 +135,7 @@ __Example__
     proxy.listen({ port: 80 });
 
 <a name="proxy_close" />
+
 ### proxy.close
 
 Stops the proxy listening.
@@ -142,6 +145,7 @@ __Example__
     proxy.close();
 
 <a name="proxy_onError" />
+
 ### proxy.onError(fn) or ctx.onError(fn)
 
 Adds a function to the list of functions to get called if an error occures.
@@ -159,6 +163,7 @@ __Example__
     });
 
 <a name="proxy_onCertificateRequired" />
+
 ### proxy.onCertificateRequired = function(hostname, callback)
 
 Allows the default certificate name/path computation to be overwritten.
@@ -191,6 +196,7 @@ __Example 2: Wilcard certificates__
 
 
 <a name="proxy_onCertificateMissing" />
+
 ### proxy.onCertificateMissing = function(ctx, files, callback)
 
 Allows you to handle missing certificate files for current request, for example, creating them on the fly.
@@ -232,6 +238,7 @@ __Example 2: Wilcard certificates__
 
 
 <a name="proxy_onRequest" />
+
 ### proxy.onRequest(fn) or ctx.onRequest(fn)
 
 Adds a function to get called at the beginning of a request.
@@ -248,6 +255,7 @@ __Example__
     });
 
 <a name="proxy_onRequestData" />
+
 ### proxy.onRequestData(fn) or ctx.onRequestData(fn)
 
 Adds a function to get called for each request data chunk (the body).
@@ -264,6 +272,7 @@ __Example__
     });
 
 <a name="proxy_onRequestEnd" />
+
 ### proxy.onRequestEnd(fn) or ctx.onRequestEnd(fn)
 
 Adds a function to get called when all request data (the body) was sent.
@@ -287,6 +296,7 @@ __Example__
     });
 
 <a name="proxy_onResponse" />
+
 ### proxy.onResponse(fn) or ctx.onResponse(fn)
 
 Adds a function to get called at the beginning of the response.
@@ -303,6 +313,7 @@ __Example__
     });
 
 <a name="proxy_onResponseData" />
+
 ### proxy.onResponseData(fn) or ctx.onResponseData(fn)
 
 Adds a function to get called for each response data chunk (the body).
@@ -319,6 +330,7 @@ __Example__
     });
 
 <a name="proxy_onResponseEnd" />
+
 ### proxy.onResponseEnd(fn) or ctx.onResponseEnd(fn)
 
 Adds a function to get called when the proxy request to server has ended.
@@ -335,6 +347,7 @@ __Example__
     });
 
 <a name="proxy_onWebSocketConnection" />
+
 ### proxy.onWebSocketConnection(fn) or ctx.onWebSocketConnection(fn)
 
 Adds a function to get called at the beginning of websocket connection
@@ -351,6 +364,7 @@ __Example__
     });
 
 <a name="proxy_onWebSocketSend" />
+
 ### proxy.onWebSocketSend(fn) or ctx.onWebSocketSend(fn)
 
 Adds a function to get called for each WebSocket message sent by the client.
@@ -367,6 +381,7 @@ __Example__
     });
 
 <a name="proxy_onWebSocketMessage" />
+
 ### proxy.onWebSocketMessage(fn) or ctx.onWebSocketMessage(fn)
 
 Adds a function to get called for each WebSocket message received from the server.
@@ -383,6 +398,7 @@ __Example__
     });
 
 <a name="proxy_onWebSocketFrame" />
+
 ### proxy.onWebSocketFrame(fn) or ctx.onWebSocketFrame(fn)
 
 Adds a function to get called for each WebSocket frame exchanged (`message`, `ping` or `pong`).
@@ -399,6 +415,7 @@ __Example__
     });
 
 <a name="proxy_onWebSocketError" />
+
 ### proxy.onWebSocketError(fn) or ctx.onWebSocketError(fn)
 
 Adds a function to the list of functions to get called if an error occures in WebSocket.
@@ -414,6 +431,7 @@ __Example__
     });
  
 <a name="proxy_onWebSocketClose" />
+
 ### proxy.onWebSocketClose(fn) or ctx.onWebSocketClose(fn)
 
 Adds a function to get called when a WebSocket connection is closed
@@ -430,6 +448,7 @@ __Example__
     });
 
 <a name="proxy_use" />
+
 ### proxy.use(module) or ctx.use(module)
 
 Adds a module into the proxy. Modules encapsulate multiple life cycle processing functions into one object.
@@ -460,9 +479,11 @@ node-http-mitm-proxy provide some ready to use modules:
 - `Proxy.wildcard` Generates wilcard certificates by default (so less certificates are generated)
 
 <a name="context"/>
+
 ## Context
 
 <a name="context_addRequestFilter" />
+
 ### ctx.addRequestFilter(stream)
 
 Adds a stream into the request body stream.
@@ -476,6 +497,7 @@ __Example__
     ctx.addRequestFilter(zlib.createGunzip());
 
 <a name="context_addRequestFilter" />
+
 ### ctx.addResponseFilter(stream)
 
 Adds a stream into the response body stream.
