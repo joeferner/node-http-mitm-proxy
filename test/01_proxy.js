@@ -1,4 +1,3 @@
-
 var util = require('util');
 var assert = require('assert');
 var crypto = require('crypto');
@@ -70,24 +69,24 @@ describe('proxy', function () {
     });
     srvB.listen(testPortB, testHost);
   });
-  
+
   beforeEach(function (done) {
     proxy = new Proxy();
     proxy.listen({ port: testProxyPort, silent: true }, done);
   });
-  
+
   afterEach(function () {
     proxy.close();
     proxy = null;
   });
-  
+
   after(function () {
     srvA.close();
     srvA = null;
     srvB.close();
     srvB = null;
   });
-  
+
   describe('ca server', function () {
     it('should generate a root CA file', function (done) {
       fs.access(__dirname + '/../.http-mitm-proxy/certs/ca.pem', function (err) {
@@ -102,7 +101,7 @@ describe('proxy', function () {
       });
     });
   });
-  
+
   describe('http server', function () {
     describe('get a 1024 byte file', function () {
       it('a', function (done) {
@@ -125,7 +124,7 @@ describe('proxy', function () {
       });
     });
   });
-  
+
   describe('proxy server', function () {
     this.timeout(5000);
     describe('proxy a 1024 byte file', function () {
@@ -182,7 +181,7 @@ describe('proxy', function () {
           }
           return callback();
         });
-      
+
         proxyHttp(testUrlA + '/1024', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
@@ -205,5 +204,5 @@ describe('proxy', function () {
       });
     });
   });
-  
+
 });
