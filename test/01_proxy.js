@@ -1,4 +1,3 @@
-
 var util = require('util');
 var assert = require('assert');
 var crypto = require('crypto');
@@ -6,6 +5,7 @@ var request = require('request');
 var fs = require('fs');
 var http = require('http');
 var nodeStatic = require('node-static');
+var WebSocket = require('ws');
 var Proxy = require('../');
 var fileStaticA = new nodeStatic.Server(__dirname + '/wwwA');
 var fileStaticB = new nodeStatic.Server(__dirname + '/wwwB');
@@ -14,6 +14,7 @@ var testHostName = 'localhost';
 var testPortA = 40005;
 var testPortB = 40006;
 var testProxyPort = 40010;
+var testWSPort = 40007;
 var testUrlA = 'http://' + testHost + ':' + testPortA;
 var testUrlB = 'http://' + testHost + ':' + testPortB;
 
@@ -25,7 +26,7 @@ var getHttp = function (url, cb) {
 
 var proxyHttp = function (url, cb) {
   request({ url: url, proxy: 'http://127.0.0.1:' + testProxyPort, ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem') }, function (err, resp, body) {
-	cb(err, resp, body);
+	  cb(err, resp, body);
   });
 };
 
@@ -53,6 +54,8 @@ describe('proxy', function () {
   var testFiles = [
     '1024'
   ];
+  var wss = null;
+
   before(function () {
     testFiles.forEach(function (val) {
       testHashes[val] = crypto.createHash('sha256').update(fs.readFileSync(__dirname + '/www/' + val, 'utf8'), 'utf8').digest().toString();
@@ -69,25 +72,36 @@ describe('proxy', function () {
       }).resume();
     });
     srvB.listen(testPortB, testHost);
+    wss = new WebSocket.Server({
+      port: testWSPort,
+    });
+    wss.on('connection', function (ws) {
+      // just reply with the same message
+      ws.on('message', function (message) {
+        ws.send(message);
+      });
+    });
   });
-  
+
   beforeEach(function (done) {
     proxy = new Proxy();
     proxy.listen({ port: testProxyPort, silent: true }, done);
   });
-  
+
   afterEach(function () {
     proxy.close();
     proxy = null;
   });
-  
+
   after(function () {
     srvA.close();
     srvA = null;
     srvB.close();
     srvB = null;
+    wss.close();
+    wss = null;
   });
-  
+
   describe('ca server', function () {
     it('should generate a root CA file', function (done) {
       fs.access(__dirname + '/../.http-mitm-proxy/certs/ca.pem', function (err) {
@@ -102,7 +116,7 @@ describe('proxy', function () {
       });
     });
   });
-  
+
   describe('http server', function () {
     describe('get a 1024 byte file', function () {
       it('a', function (done) {
@@ -125,7 +139,7 @@ describe('proxy', function () {
       });
     });
   });
-  
+
   describe('proxy server', function () {
     this.timeout(5000);
     describe('proxy a 1024 byte file', function () {
@@ -162,7 +176,6 @@ describe('proxy', function () {
     describe('host match', function () {
       it('proxy and modify AAA 5 times if hostA', function (done) {
         proxy.onRequest(function (ctx, callback) {
-          // console.log(ctx.clientToProxyRequest.headers);
           var testHostNameA = '127.0.0.1:' + testPortA;
           if (ctx.clientToProxyRequest.headers.host === testHostNameA) {
             var chunks = [];
@@ -182,7 +195,7 @@ describe('proxy', function () {
           }
           return callback();
         });
-      
+
         proxyHttp(testUrlA + '/1024', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
@@ -205,5 +218,92 @@ describe('proxy', function () {
       });
     });
   });
-  
+
+  describe('websocket server', function() {
+    this.timeout(2000);
+
+    it('send + receive message without proxy', function (done) {
+      var ws = new WebSocket('ws://localhost:' + testWSPort);
+      var testMessage = 'does the websocket server reply?';
+      ws.on('open', function () {
+        ws.on('message', function (data) {
+          assert.equal(data, testMessage);
+          ws.close();
+          done();
+        });
+        ws.send(testMessage);
+      });
+    });
+
+    it('send + receive message through proxy', function (done) {
+      var ws = new WebSocket('ws://localhost:' + testProxyPort, {
+        host: 'localhost:' + testWSPort,
+      });
+      var testMessage = 'does websocket proxying work?';
+      ws.on('open', function () {
+        ws.on('message', function (data) {
+          assert.equal(data, testMessage);
+          ws.close();
+          done();
+        });
+        ws.send(testMessage);
+      });
+    });
+
+    it('websocket callbacks get called', function (done) {
+      var stats = {
+        connection: false,
+        frame: false,
+        send: false,
+        message: false,
+        close: false,
+      };
+
+      proxy.onWebSocketConnection(function (ctx, callback) {
+        stats.connection = true;
+        return callback();
+      });
+      proxy.onWebSocketFrame(function(ctx, type, fromServer, message, flags, callback) {
+        stats.frame = true;
+        message = rewrittenMessage;
+        return callback(null, message, flags);
+      });
+      proxy.onWebSocketSend(function(ctx, message, flags, callback) {
+        stats.send = true;
+        return callback(null, message, flags);
+      });
+      proxy.onWebSocketMessage(function(ctx, message, flags, callback) {
+        stats.message = true;
+        return callback(null, message, flags);
+      });
+      proxy.onWebSocketClose(function(ctx, code, message, callback) {
+        stats.close = true;
+        callback(null, code, message);
+      });
+
+      var ws = new WebSocket('ws://localhost:' + testProxyPort, {
+        host: 'localhost:' + testWSPort,
+      });
+      var testMessage = 'does rewriting messages work?';
+      var rewrittenMessage = 'rewriting messages does work!';
+      ws.on('open', function () {
+        ws.on('message', function (data) {
+          assert.equal(data, rewrittenMessage);
+          ws.close();
+        });
+        ws.on('close', function () {
+          setTimeout(() => {
+            assert(stats.connection);
+            assert(stats.frame);
+            assert(stats.send);
+            assert(stats.message);
+            assert(stats.close);
+
+            done();
+          }, 0);
+        });
+        ws.send(testMessage);
+      });
+    });
+  });
 });
