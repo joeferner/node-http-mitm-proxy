@@ -55,10 +55,10 @@
          onCertificateMissing(ctx: IContext, files: any, callback: (error: Error | undefined, certDetails: { keyFileData: string; certFileData: string; hosts: string[]; }) => void): void;
 
          //undocumented helpers
-         onConnect(fcn: (req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error: Error | undefined) => void) => void): void;
-         onRequestHeaders(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
-         onResponseHeaders(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
-         onWebSocketConnection(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
+         onConnect(fcn: (req: http.IncomingMessage, socket: net.Socket, head: any, callback: (error?: Error) => void) => void): void;
+         onRequestHeaders(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
+         onResponseHeaders(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
+         onWebSocketConnection(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
          onWebSocketSend(fcn: (ctx: IContext, message: any, flags: any, callback: (err: Error | undefined, message: any, flags: any) => void) => void): void;
          onWebSocketMessage(fcn: (ctx: IContext, message: any, flags: any, callback: (err: Error | undefined, message: any, flags: any) => void) => void): void;
          onWebSocketFrame(fcn: (ctx: IContext, type: any, fromServer: boolean, message: any, flags: any, callback: (err: Error | undefined, message: any, flags: any) => void) => void): void;
@@ -100,11 +100,11 @@
            console.log('REQUEST:', ctx.clientToProxyRequest.url);
            return callback();
          }); */
-         onRequest(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
+         onRequest(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
 
          onRequestData(fcn: (ctx: IContext, chunk: Buffer, callback: (error?: Error, chunk?: Buffer) => void) => void): void;
 
-         onRequestEnd(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
+         onRequestEnd(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
          /** Adds a function to get called at the beginning of the response.
         
          Arguments
@@ -116,11 +116,11 @@
            console.log('BEGIN RESPONSE');
            return callback();
          }); */
-         onResponse(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
+         onResponse(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
 
          onResponseData(fcn: (ctx: IContext, chunk: Buffer, callback: (error?: Error, chunk?: Buffer) => void) => void): void;
 
-         onResponseEnd(fcn: (ctx: IContext, callback: (error: Error | undefined) => void) => void): void;
+         onResponseEnd(fcn: (ctx: IContext, callback: (error?: Error) => void) => void): void;
 
          /** Adds a module into the proxy. Modules encapsulate multiple life cycle processing functions into one object.
 
