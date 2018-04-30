@@ -41,7 +41,7 @@
 
      export type IProxy = ICallbacks & {
          /** Starts the proxy listening on the given port..  example: proxy.listen({ port: 80 }); */
-         listen(/** An object with the following options: */ options?: IProxyOptions): void;
+         listen(/** An object with the following options: */ options?: IProxyOptions, callback?: function): void;
          /** proxy.close
          Stops the proxy listening.
         
