@@ -21,8 +21,6 @@
          host?: string;
          /** - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')*/
          sslCaDir?: string;
-         /**  - if set to true, nothing will be written to console (default: false) */
-         silent?: boolean;
          /**  - enable HTTP persistent connection*/
          keepAlive?: boolean;
          /**  - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout. */
@@ -69,7 +67,6 @@
          // onRequestHandlers:((ctx,callback)=>void)[];
 
          options: IProxyOptions;
-         silent: boolean;
          httpPort: number;
          timeout: number;
          keepAlive: boolean;
