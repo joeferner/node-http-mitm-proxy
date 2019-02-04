@@ -1,3 +1,9 @@
 language: node_js
+os:
+  - "windows"
+  - "osx"
+  - "linux"
 node_js:
   - "7"
+  - "lts/*"
+  - "node"
