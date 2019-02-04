@@ -52,7 +52,7 @@ describe('proxy', function () {
   var proxy = null;
   var testHashes = {};
   var testFiles = [
-    '1024'
+    '1024.bin'
   ];
   var wss = null;
 
@@ -120,26 +120,22 @@ describe('proxy', function () {
   describe('http server', function () {
     describe('get a 1024 byte file', function () {
       it('a', function (done) {
-        getHttp(testUrlA + '/1024', function (err, resp, body) {
+        getHttp(testUrlA + '/1024.bin', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
-          if (len !== 1024) { 
-            console.log('body was');
-            console.log(body);
-          }
           assert.equal(1024, len, 'body length is 1024');
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
           done();
         });
       });
       it('b', function (done) {
-        getHttp(testUrlB + '/1024', function (err, resp, body) {
+        getHttp(testUrlB + '/1024.bin', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len, 'body length is 1024');
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
           done();
         });
       });
@@ -150,22 +146,22 @@ describe('proxy', function () {
     this.timeout(5000);
     describe('proxy a 1024 byte file', function () {
       it('a', function (done) {
-        proxyHttp(testUrlA + '/1024', function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
           done();
         });
       });
       it('b', function (done) {
-        proxyHttp(testUrlB + '/1024', function (err, resp, body) {
+        proxyHttp(testUrlB + '/1024.bin', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
-          assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
           done();
         });
       });
@@ -202,14 +198,14 @@ describe('proxy', function () {
           return callback();
         });
 
-        proxyHttp(testUrlA + '/1024', function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
           countString(body, 'AAA', function (count) {
             assert.equal(5, count);
-            proxyHttp(testUrlB + '/1024', function (errB, respB, bodyB) {
+            proxyHttp(testUrlB + '/1024.bin', function (errB, respB, bodyB) {
               if (errB) console.log('errB: ' + errB.toString());
               var lenB = 0;
               if (bodyB.hasOwnProperty('length')) lenB = bodyB.length;
