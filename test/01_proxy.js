@@ -297,9 +297,14 @@ describe('proxy', function () {
             assert(stats.frame);
             assert(stats.send);
             assert(stats.message);
-            assert(stats.close);
-
-            done();
+            if (!stats.close) {
+              setTimeout(500, () => {
+                assert(stats.close);
+                done();
+              });
+            } else {
+              done();
+            }
           }, 0);
         });
         ws.send(testMessage);
