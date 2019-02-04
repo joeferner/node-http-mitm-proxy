@@ -121,8 +121,13 @@ describe('proxy', function () {
     describe('get a 1024 byte file', function () {
       it('a', function (done) {
         getHttp(testUrlA + '/1024', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
+          if (len !== 1024) { 
+            console.log('body was');
+            console.log(body);
+          }
           assert.equal(1024, len, 'body length is 1024');
           assert.equal(testHashes['1024'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
           done();
@@ -130,6 +135,7 @@ describe('proxy', function () {
       });
       it('b', function (done) {
         getHttp(testUrlB + '/1024', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len, 'body length is 1024');
