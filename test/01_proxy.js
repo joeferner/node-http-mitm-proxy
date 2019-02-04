@@ -24,8 +24,15 @@ var getHttp = function (url, cb) {
   });
 };
 
-var proxyHttp = function (url, cb) {
-  request({ url: url, proxy: 'http://127.0.0.1:' + testProxyPort, ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem') }, function (err, resp, body) {
+var proxyHttp = function (url, keepAlive, cb) {
+  request({ 
+    url: url, 
+    proxy: 'http://127.0.0.1:' + testProxyPort, 
+    ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem'),
+    agentOptions: {
+      keepAlive: keepAlive
+    }
+  }, function (err, resp, body) {
 	  cb(err, resp, body);
   });
 };
@@ -146,7 +153,7 @@ describe('proxy', function () {
     this.timeout(5000);
     describe('proxy a 1024 byte file', function () {
       it('a', function (done) {
-        proxyHttp(testUrlA + '/1024.bin', function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -156,7 +163,7 @@ describe('proxy', function () {
         });
       });
       it('b', function (done) {
-        proxyHttp(testUrlB + '/1024.bin', function (err, resp, body) {
+        proxyHttp(testUrlB + '/1024.bin', false, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -168,13 +175,46 @@ describe('proxy', function () {
     });
     describe('ssl', function () {
       it('proxys to google.com using local ca file', function (done) {
-        proxyHttp('https://www.google.com/', function (err, resp, body) {
+        proxyHttp('https://www.google.com/', false, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
       });
     });
+
+    describe('proxy a 1024 byte file with keepAlive', function () {
+      it('a', function (done) {
+        proxyHttp(testUrlA + '/1024.bin', true, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+      it('b', function (done) {
+        proxyHttp(testUrlB + '/1024.bin', true, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+    });
+    describe('ssl with keepAlive', function () {
+      it('proxys to google.com using local ca file', function (done) {
+        proxyHttp('https://www.google.com/', true, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          assert.equal(200, resp.statusCode, '200 Status code from Google.');
+          done();
+        });
+      });
+    });
+
     describe('host match', function () {
       it('proxy and modify AAA 5 times if hostA', function (done) {
         proxy.onRequest(function (ctx, callback) {
@@ -198,14 +238,14 @@ describe('proxy', function () {
           return callback();
         });
 
-        proxyHttp(testUrlA + '/1024.bin', function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
           countString(body, 'AAA', function (count) {
             assert.equal(5, count);
-            proxyHttp(testUrlB + '/1024.bin', function (errB, respB, bodyB) {
+            proxyHttp(testUrlB + '/1024.bin', false, function (errB, respB, bodyB) {
               if (errB) console.log('errB: ' + errB.toString());
               var lenB = 0;
               if (bodyB.hasOwnProperty('length')) lenB = bodyB.length;
