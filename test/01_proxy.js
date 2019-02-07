@@ -93,6 +93,10 @@ describe('proxy', function () {
   beforeEach(function (done) {
     proxy = new Proxy();
     proxy.listen({ port: testProxyPort, silent: true }, done);
+    proxy.onError(function (ctx, err, errorKind) {
+      var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+      console.log('proxy error: ' + errorKind + ' on ' + url + ':', err);
+    });
   });
 
   afterEach(function () {
