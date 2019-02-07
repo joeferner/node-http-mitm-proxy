@@ -344,10 +344,10 @@ describe('proxy', function () {
             assert(stats.send);
             assert(stats.message);
             if (!stats.close) {
-              setTimeout(500, () => {
+              setTimeout(() => {
                 assert(stats.close);
                 done();
-              });
+              }, 500);
             } else {
               done();
             }
