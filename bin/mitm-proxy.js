@@ -3,6 +3,7 @@
 'use strict';
 
 var optimist = require('optimist');
+var debug = require('debug')('http-mitm-proxy:bin');
 
 var args = optimist
   .alias('h', 'help')
@@ -24,11 +25,12 @@ if (args.help) {
 
 var proxy = require('../lib/proxy')();
 proxy.onError(function(ctx, err, errorKind) {
-  if (!args.silent) {
-    console.error(errorKind, err);
-  }
+  debug(errorKind, err);
 });
-proxy.listen(args);
-if (!args.silent) {
-  console.log('proxy listening on ' + args.port);
-}
+proxy.listen(args, function(err) {
+  if (err) {
+    debug('Failed to start listening on port ' + args.port, err);
+    return process.exit(1);
+  }
+  debug('proxy listening on ' + args.port);
+});
