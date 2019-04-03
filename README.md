@@ -409,8 +409,8 @@ __Arguments__
 __Example__
 
     proxy.onWebSocketFrame(function(ctx, type, fromServer, data, flags, callback) {
-      console.log('WEBSOCKET FRAME ' + type + ' received from ' + (fromServer ? 'server' : 'client'), ctx.clientToProxyWebSocket.upgradeReq.url, message);
-      return callback(null, message, flags);
+      console.log('WEBSOCKET FRAME ' + type + ' received from ' + (fromServer ? 'server' : 'client'), ctx.clientToProxyWebSocket.upgradeReq.url, data);
+      return callback(null, data, flags);
     });
 
 <a name="proxy_onWebSocketError" />
