@@ -1,9 +1,10 @@
-var util = require('util');
 var assert = require('assert');
 var crypto = require('crypto');
 var request = require('request');
 var fs = require('fs');
 var http = require('http');
+var url = require('url');
+var keepAliveProxyAgent = require('keepalive-proxy-agent');
 var nodeStatic = require('node-static');
 var WebSocket = require('ws');
 var Proxy = require('../');
@@ -24,15 +25,31 @@ var getHttp = function (url, cb) {
   });
 };
 
-var proxyHttp = function (url, keepAlive, cb) {
-  request({ 
+var proxyHttp = function (url, agent, cb) {
+  return request({ 
     url: url, 
     proxy: 'http://127.0.0.1:' + testProxyPort, 
     ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem'),
-    agentOptions: {
-      keepAlive: keepAlive
-    }
+    agent: agent
   }, function (err, resp, body) {
+	  cb(err, resp, body);
+  });
+};
+
+var proxyHttps = function (targetUrl, proxyAgent, cb) {
+  let options = {
+    url: targetUrl, 
+    ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem'),
+  };
+  if (!proxyAgent) {
+    options.proxy = 'http://127.0.0.1:' + testProxyPort; 
+  } else {
+    let urlParsed = url.parse(targetUrl);
+    options.hostname = urlParsed.hostname, // Required by keepalive-proxy-agent
+    options.agent = proxyAgent;
+  }
+
+  return request(options, function (err, resp, body) {
 	  cb(err, resp, body);
   });
 };
@@ -72,7 +89,7 @@ describe('proxy', function () {
         fileStaticA.serve(req, res);
       }).resume();
     });
-    srvA.listen(testPortA, testHost);
+    srvA.listen(testPortA, testHost); 
     srvB = http.createServer(function (req, res) {
       req.addListener('end', function () {
         fileStaticB.serve(req, res);
@@ -111,6 +128,93 @@ describe('proxy', function () {
     srvB = null;
     wss.close();
     wss = null;
+  });
+
+  describe('close', function () {
+    it('should not fail on multiple calls to close', function () {
+      proxy.close();
+      proxy.close();
+    });
+
+    it('close should call callback when there are no connections', function (done) {
+      proxy.close(done);
+    });
+
+    it('close should call callback when all http connections are closed', function (done) {
+      let t = new Date();
+      let closeDone = false;
+      let keepAliveAgent = new http.Agent({keepAlive: true});
+      proxyHttp(testUrlA + '/1024.bin', keepAliveAgent, function (err, resp, body) {
+        var len = 0;
+        if (body.hasOwnProperty('length')) len = body.length;
+        assert.equal(1024, len);
+
+        proxy.close((err) => {
+          if (err) {
+            return done(err);
+          }
+          let t2 = new Date();
+          let diff = t2.getTime() - t.getTime();
+          // Will not wait for keepAlive since proxy isn't performing keepAlive
+          assert.equal(true, diff < 400);
+          closeDone = true;
+        });
+      });
+
+      setTimeout(() => {
+        keepAliveAgent.destroy();
+        if (closeDone) {
+          done();
+        } else {
+          done(new Error('Close was not called'))
+        }
+      }, 500);
+  });
+
+    it('close should call callback when all http and https connections are closed', function (done) {
+      let closeDone = false;
+      let keepAliveAgent1 = new http.Agent({keepAlive: true});
+      proxyHttp(testUrlA + '/1024.bin', keepAliveAgent1, function (err, resp, body) {
+        if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+        var len = 0;
+        if (body.hasOwnProperty('length')) len = body.length;
+        assert.equal(1024, len);
+      });
+
+      let keepAliveAgent2 = new keepAliveProxyAgent({ proxy: { hostname: '127.0.0.1', port: testProxyPort } });
+      proxyHttps('https://www.google.com/', keepAliveAgent2, function (err, resp, body) {
+        if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+        assert.equal(200, resp.statusCode, '200 Status code from Google.');
+      });
+
+      let t = new Date();
+      setTimeout(() => {
+        keepAliveAgent1.destroy();
+      }, 500);
+
+      setTimeout(() => {
+        keepAliveAgent2.destroy();
+        if (closeDone) {
+          done();
+        } else {
+          done(new Error('Close was not called'))
+        }
+      }, 700);
+
+      setTimeout(() => {
+        proxy.close((err) => {
+          if (err) {
+            return done(err);
+          }
+          let t2 = new Date();
+          let diff = t2.getTime() - t.getTime();
+          // Will not wait for keepAlive since proxy isn't performing keepAlive
+          assert.equal(true, diff < 400);
+          closeDone = true;
+        });
+      }, 200);
+    });
+
   });
 
   describe('ca server', function () {
@@ -157,7 +261,7 @@ describe('proxy', function () {
     this.timeout(5000);
     describe('proxy a 1024 byte file', function () {
       it('a', function (done) {
-        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', null, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -167,7 +271,7 @@ describe('proxy', function () {
         });
       });
       it('b', function (done) {
-        proxyHttp(testUrlB + '/1024.bin', false, function (err, resp, body) {
+        proxyHttp(testUrlB + '/1024.bin', null, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -179,7 +283,7 @@ describe('proxy', function () {
     });
     describe('ssl', function () {
       it('proxys to google.com using local ca file', function (done) {
-        proxyHttp('https://www.google.com/', false, function (err, resp, body) {
+        proxyHttps('https://www.google.com/', null, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
@@ -189,7 +293,8 @@ describe('proxy', function () {
 
     describe('proxy a 1024 byte file with keepAlive', function () {
       it('a', function (done) {
-        proxyHttp(testUrlA + '/1024.bin', true, function (err, resp, body) {
+        let keepAliveAgent = new http.Agent({keepAlive: true});
+        proxyHttp(testUrlA + '/1024.bin', keepAliveAgent, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -199,7 +304,8 @@ describe('proxy', function () {
         });
       });
       it('b', function (done) {
-        proxyHttp(testUrlB + '/1024.bin', true, function (err, resp, body) {
+        let keepAliveAgent = new http.Agent({keepAlive: true});
+        proxyHttp(testUrlB + '/1024.bin', keepAliveAgent, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
@@ -211,7 +317,8 @@ describe('proxy', function () {
     });
     describe('ssl with keepAlive', function () {
       it('proxys to google.com using local ca file', function (done) {
-        proxyHttp('https://www.google.com/', true, function (err, resp, body) {
+        let keepAliveAgent = new keepAliveProxyAgent({ proxy: { hostname: '127.0.0.1', port: testProxyPort } });
+        proxyHttps('https://www.google.com/', keepAliveAgent, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
@@ -242,14 +349,14 @@ describe('proxy', function () {
           return callback();
         });
 
-        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+        proxyHttp(testUrlA + '/1024.bin', null, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
           if (body.hasOwnProperty('length')) len = body.length;
           assert.equal(1024, len);
           countString(body, 'AAA', function (count) {
             assert.equal(5, count);
-            proxyHttp(testUrlB + '/1024.bin', false, function (errB, respB, bodyB) {
+            proxyHttp(testUrlB + '/1024.bin', null, function (errB, respB, bodyB) {
               if (errB) console.log('errB: ' + errB.toString());
               var lenB = 0;
               if (bodyB.hasOwnProperty('length')) lenB = bodyB.length;
@@ -354,6 +461,253 @@ describe('proxy', function () {
           }, 0);
         });
         ws.send(testMessage);
+      });
+    });
+  });
+});
+
+describe('proxy with keepAlive', function () {
+  this.timeout(30000);
+  var srvA = null;
+  var srvB = null;
+  var proxy = null;
+  var testHashes = {};
+  var testFiles = [
+    '1024.bin'
+  ];
+  var wss = null;
+
+  before(function () {
+    testFiles.forEach(function (val) {
+      testHashes[val] = crypto.createHash('sha256').update(fs.readFileSync(__dirname + '/www/' + val, 'utf8'), 'utf8').digest().toString();
+    });
+    srvA = http.createServer(function (req, res) {
+      req.addListener('end', function () {
+        fileStaticA.serve(req, res);
+      }).resume();
+    });
+    srvA.listen(testPortA, testHost); 
+    srvB = http.createServer(function (req, res) {
+      req.addListener('end', function () {
+        fileStaticB.serve(req, res);
+      }).resume();
+    });
+    srvB.listen(testPortB, testHost);
+    wss = new WebSocket.Server({
+      port: testWSPort,
+    });
+    wss.on('connection', function (ws) {
+      // just reply with the same message
+      ws.on('message', function (message) {
+        ws.send(message);
+      });
+    });
+  });
+
+  beforeEach(function (done) {
+    proxy = new Proxy();
+    proxy.listen({ port: testProxyPort, keepAlive: true }, done);
+    proxy.onError(function (ctx, err, errorKind) {
+      var url = (ctx && ctx.clientToProxyRequest) ? ctx.clientToProxyRequest.url : '';
+      console.log('proxy error: ' + errorKind + ' on ' + url + ':', err);
+    });
+  });
+
+  afterEach(function () {
+    proxy.close();
+    proxy = null;
+  });
+
+  after(function () {
+    srvA.close();
+    srvA = null;
+    srvB.close();
+    srvB = null;
+    wss.close();
+    wss = null;
+  });
+
+  describe('close', function () {
+    it('should not fail on multiple calls to close', function () {
+      proxy.close();
+      proxy.close();
+    });
+
+    it('close should call callback when there are no connections', function (done) {
+      proxy.close(done);
+    });
+
+    it('close should call callback when all connections are closed', function (done) {
+      let t = new Date();
+      let keepAliveAgent = new http.Agent({keepAlive: true});
+      proxyHttp(testUrlA + '/1024.bin', keepAliveAgent, function (err, resp, body) {
+        var len = 0;
+        if (body.hasOwnProperty('length')) len = body.length;
+        assert.equal(1024, len);
+
+        proxy.close((err) => {
+          if (err) {
+            return done(err);
+          }
+          let t2 = new Date();
+          let diff = t2.getTime() - t.getTime();
+          // Should wait for keepAlive agent to close connection
+          assert.equal(true, diff > 500);
+          done();
+        });
+      });
+
+      setTimeout(() => {
+        keepAliveAgent.destroy();
+      }, 500);
+  });
+
+    it('close should call callback when all http and https connections are closed', function (done) {
+      let keepAliveAgent1 = new http.Agent({keepAlive: true});
+      proxyHttp(testUrlA + '/1024.bin', keepAliveAgent1, function (err, resp, body) {
+        if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+        var len = 0;
+        if (body.hasOwnProperty('length')) len = body.length;
+        assert.equal(1024, len);
+      });
+
+      let keepAliveAgent2 = new keepAliveProxyAgent({ proxy: { hostname: '127.0.0.1', port: testProxyPort } });
+
+      proxyHttps('https://www.google.com/', keepAliveAgent2, function (err, resp, body) {
+        if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+        assert.equal(200, resp.statusCode, '200 Status code from Google.');
+      });
+
+      let t = new Date();
+      setTimeout(() => {
+        keepAliveAgent1.destroy();
+      }, 500);
+
+      setTimeout(() => {
+        keepAliveAgent2.destroy();
+      }, 700);
+
+      setTimeout(() => {
+        proxy.close((err) => {
+          if (err) {
+            return done(err);
+          }
+          let t2 = new Date();
+          let diff = t2.getTime() - t.getTime();
+          // Should wait for keepAlive agents to close connection
+          assert.equal(true, diff > 700);
+          done();
+        });
+      }, 200);
+    });
+  });
+
+  describe('ca server', function () {
+    it('should generate a root CA file', function (done) {
+      fs.access(__dirname + '/../.http-mitm-proxy/certs/ca.pem', function (err) {
+        var rtv = null;
+        if (err) {
+          rtv = __dirname + '/../.http-mitm-proxy/certs/ca.pem ' + err;
+        } else {
+          rtv = true;
+        }
+        assert.equal(true, rtv, 'Can access the CA cert');
+        done();
+      });
+    });
+  });
+
+  describe('http server', function () {
+    describe('get a 1024 byte file', function () {
+      it('a', function (done) {
+        getHttp(testUrlA + '/1024.bin', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len, 'body length is 1024');
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
+          done();
+        });
+      });
+      it('b', function (done) {
+        getHttp(testUrlB + '/1024.bin', function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len, 'body length is 1024');
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString(), 'sha256 hash matches');
+          done();
+        });
+      });
+    });
+  });
+
+  describe('proxy server', function () {
+    this.timeout(5000);
+    describe('proxy a 1024 byte file', function () {
+      it('a', function (done) {
+        proxyHttp(testUrlA + '/1024.bin', null, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+      it('b', function (done) {
+        proxyHttp(testUrlB + '/1024.bin', null, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+    });
+    describe('ssl', function () {
+      it('proxys to google.com using local ca file', function (done) {
+        proxyHttps('https://www.google.com/', null, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          assert.equal(200, resp.statusCode, '200 Status code from Google.');
+          done();
+        });
+      });
+    });
+
+    describe('proxy a 1024 byte file with keepAlive', function () {
+      it('a', function (done) {
+        let keepAliveAgent = new http.Agent({keepAlive: true});
+        proxyHttp(testUrlA + '/1024.bin', keepAliveAgent, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+      it('b', function (done) {
+        let keepAliveAgent = new http.Agent({keepAlive: true});
+        proxyHttp(testUrlB + '/1024.bin', keepAliveAgent, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      });
+    });
+    describe('ssl with keepAlive', function () {
+      it('proxys to google.com using local ca file', function (done) {
+        let keepAliveAgent = new keepAliveProxyAgent({ proxy: { hostname: '127.0.0.1', port: testProxyPort } });
+        proxyHttps('https://www.google.com/', keepAliveAgent, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          assert.equal(200, resp.statusCode, '200 Status code from Google.');
+          done();
+        });
       });
     });
   });

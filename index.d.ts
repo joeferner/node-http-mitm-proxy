@@ -45,8 +45,8 @@
         
          Example
         
-         proxy.close(); */
-         close(): void;
+         proxy.close((error) => void); */
+         close(callback?: (error?: Error) => void): void;
 
 
          onCertificateRequired(hostname: string, callback: (error: Error | undefined, certDetails: { keyFile: string; certFile: string; hosts: string[]; }) => void): void;

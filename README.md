@@ -137,11 +137,17 @@ __Example__
 
 ### proxy.close
 
-Stops the proxy listening.
+Stops the proxy listening. This function is async - it will not wait for ongoing connections to close. Use the callback variant to get notified when all connections have been closed.
 
-__Example__
+__Example 1__
 
     proxy.close();
+
+__Example 2: Closed callback__
+
+    proxy.close(function (error) {
+      console.log('All connections have been closed');
+    });
 
 <a name="proxy_onError" />
 

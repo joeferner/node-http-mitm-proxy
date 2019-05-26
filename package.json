@@ -29,6 +29,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "https-proxy-agent": "^2.2.1",
+    "keepalive-proxy-agent": "^1.0.1",
     "mocha": "^6.1.4",
     "node-static": "^0.7.10",
     "request": "^2.83.0"
