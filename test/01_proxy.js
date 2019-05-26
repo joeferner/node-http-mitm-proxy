@@ -1,6 +1,7 @@
 var util = require('util');
 var assert = require('assert');
 var crypto = require('crypto');
+var zlib = require('zlib');
 var request = require('request');
 var fs = require('fs');
 var http = require('http');
@@ -260,6 +261,65 @@ describe('proxy', function () {
               });
             });
           });
+        });
+      });
+    });
+
+    describe('chunked transfer', function () {
+      it('should not change transfer encoding when no content modification is active', function () {
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal(null, resp.headers['transfer-encoding']);
+          assert.equal(1024, resp.headers['content-length']);
+        });
+      });
+
+      it('should use chunked transfer encoding when global onResponseData is active', function () {
+        proxy.onResponseData(function (ctx, chunk, callback) {
+          callback(null, chunk);
+        });
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal('chunked', resp.headers['transfer-encoding']);
+          assert.equal(null, resp.headers['content-length']);
+        });
+      });
+
+      it('should use chunked transfer encoding when context onResponseData is active', function () {
+        proxy.onResponse(function (ctx, callback) {
+          ctx.onResponseData(function (ctx, chunk, callback) {
+            callback(null, chunk);
+          });
+          callback(null);
+        });
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(1024, len);
+          assert.equal('chunked', resp.headers['transfer-encoding']);
+          assert.equal(null, resp.headers['content-length']);
+        });
+      });
+
+      it('should use chunked transfer encoding when context ResponseFilter is active', function () {
+        proxy.onResponse(function (ctx, callback) {
+          ctx.addResponseFilter(zlib.createGzip());
+          callback(null);
+        });
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+          if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
+          var len = 0;
+          if (body.hasOwnProperty('length')) len = body.length;
+          assert.equal(true, len < 1024); // Compressed body
+          assert.equal('chunked', resp.headers['transfer-encoding']);
+          assert.equal(null, resp.headers['content-length']);
         });
       });
     });
