@@ -19,6 +19,9 @@ proxy.onConnect(function(req, socket, head) {
     conn.on('finish', () => {
       socket.destroy();
     });
+    socket.on('close', () => {
+      conn.end();
+    });
     socket.write('HTTP/1.1 200 OK\r\n\r\n', 'UTF-8', function(){
       conn.pipe(socket);
       socket.pipe(conn);
@@ -54,6 +57,6 @@ proxy.listen({ port }, function() {
     }
     console.log(`${stdout}`);
     assert(/DOCTYPE/.test(stdout));
-    process.exit()
+    proxy.close();
   });
 });

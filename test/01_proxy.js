@@ -266,7 +266,7 @@ describe('proxy', function () {
     });
 
     describe('chunked transfer', function () {
-      it('should not change transfer encoding when no content modification is active', function () {
+      it('should not change transfer encoding when no content modification is active', function (done) {
         proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
           if (err) return done(new Error(err.message+" "+JSON.stringify(err)));
           var len = 0;
@@ -274,10 +274,11 @@ describe('proxy', function () {
           assert.equal(1024, len);
           assert.equal(null, resp.headers['transfer-encoding']);
           assert.equal(1024, resp.headers['content-length']);
+          done();
         });
       });
 
-      it('should use chunked transfer encoding when global onResponseData is active', function () {
+      it('should use chunked transfer encoding when global onResponseData is active', function (done) {
         proxy.onResponseData(function (ctx, chunk, callback) {
           callback(null, chunk);
         });
@@ -288,10 +289,11 @@ describe('proxy', function () {
           assert.equal(1024, len);
           assert.equal('chunked', resp.headers['transfer-encoding']);
           assert.equal(null, resp.headers['content-length']);
+          done();
         });
       });
 
-      it('should use chunked transfer encoding when context onResponseData is active', function () {
+      it('should use chunked transfer encoding when context onResponseData is active', function (done) {
         proxy.onResponse(function (ctx, callback) {
           ctx.onResponseData(function (ctx, chunk, callback) {
             callback(null, chunk);
@@ -305,10 +307,11 @@ describe('proxy', function () {
           assert.equal(1024, len);
           assert.equal('chunked', resp.headers['transfer-encoding']);
           assert.equal(null, resp.headers['content-length']);
+          done();
         });
       });
 
-      it('should use chunked transfer encoding when context ResponseFilter is active', function () {
+      it('should use chunked transfer encoding when context ResponseFilter is active', function (done) {
         proxy.onResponse(function (ctx, callback) {
           ctx.addResponseFilter(zlib.createGzip());
           callback(null);
@@ -320,6 +323,7 @@ describe('proxy', function () {
           assert.equal(true, len < 1024); // Compressed body
           assert.equal('chunked', resp.headers['transfer-encoding']);
           assert.equal(null, resp.headers['content-length']);
+          done();
         });
       });
     });
