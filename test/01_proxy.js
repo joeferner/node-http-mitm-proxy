@@ -185,7 +185,7 @@ describe('proxy', function () {
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
-      });
+      }).timeout(10000);
     });
 
     describe('proxy a 1024 byte file with keepAlive', function () {
@@ -217,7 +217,7 @@ describe('proxy', function () {
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
-      });
+      }).timeout(10000);
     });
 
     describe('host match', function () {
