@@ -5,6 +5,7 @@ var zlib = require('zlib');
 var request = require('request');
 var fs = require('fs');
 var http = require('http');
+var net = require('net');
 var nodeStatic = require('node-static');
 var WebSocket = require('ws');
 var Proxy = require('../');
@@ -156,6 +157,30 @@ describe('proxy', function () {
 
   describe('proxy server', function () {
     this.timeout(5000);
+
+    it('should handle socket errors in connect', function(done) {
+      // If a socket disconnects during the CONNECT process, the resulting
+      // error should be handled and shouldn't cause the proxy server to fail.
+      const socket = net.createConnection(testProxyPort, testHost, function() {
+        socket.write('CONNECT ' + testHost + ':' + testPortA + '\r\n\r\n');
+        socket.destroy();
+      });
+      socket.on('close', function() {
+        proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
+          if (err) {
+            return done(new Error(err.message + " " + JSON.stringify(err)));
+          }
+          var len = 0;
+          if (body.hasOwnProperty('length')) {
+            len = body.length;
+          }
+          assert.equal(1024, len);
+          assert.equal(testHashes['1024.bin'], crypto.createHash('sha256').update(body, 'utf8').digest().toString());
+          done();
+        });
+      })
+    });
+
     describe('proxy a 1024 byte file', function () {
       it('a', function (done) {
         proxyHttp(testUrlA + '/1024.bin', false, function (err, resp, body) {
@@ -185,7 +210,7 @@ describe('proxy', function () {
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
-      }).timeout(10000);
+      }).timeout(15000);
     });
 
     describe('proxy a 1024 byte file with keepAlive', function () {
@@ -217,7 +242,7 @@ describe('proxy', function () {
           assert.equal(200, resp.statusCode, '200 Status code from Google.');
           done();
         });
-      }).timeout(10000);
+      }).timeout(15000);
     });
 
     describe('host match', function () {
