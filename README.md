@@ -79,6 +79,7 @@ Using node-forge allows the automatic generation of SSL certificates within the 
  * proxyToClientResponse: [ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse),
  * proxyToServerRequest: [ClientRequest](https://nodejs.org/api/http.html#http_class_http_clientrequest),
  * serverToProxyResponse: [IncomingMessage](https://nodejs.org/api/http.html#http_http_incomingmessage),
+ * proxy: { host: string, port: string }
  * [onError(fn)](#proxy_onError)
  * [onRequest(fn)](#proxy_onRequest)
  * [onRequestData(fn)](#proxy_onRequestData)
