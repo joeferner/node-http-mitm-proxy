@@ -37,7 +37,7 @@
     "async": "^2.6.2",
     "debug": "^4.1.0",
     "mkdirp": "^0.5.1",
-    "node-forge": "^0.8.4",
+    "node-forge": "^0.10.0",
     "optimist": "^0.6.1",
     "semaphore": "^1.1.0",
     "ws": "^3.2.0"
