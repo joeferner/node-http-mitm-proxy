@@ -2,10 +2,10 @@
 
 'use strict';
 
-var optimist = require('optimist');
+var yargs = require('yargs');
 var debug = require('debug')('http-mitm-proxy:bin');
 
-var args = optimist
+var args = yargs
   .alias('h', 'help')
   .alias('h', '?')
   .options('port', {
@@ -19,7 +19,7 @@ var args = optimist
   .argv;
 
 if (args.help) {
-  optimist.showHelp();
+  yargs.showHelp();
   return process.exit(-1);
 }
 
