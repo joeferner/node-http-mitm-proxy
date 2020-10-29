@@ -4,6 +4,7 @@ os:
   - "osx"
   - "linux"
 node_js:
-  - "7"
+  - "10"
+  - "12"
   - "lts/*"
   - "node"
