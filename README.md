@@ -119,7 +119,7 @@ __Arguments__
 
  * options - An object with the following options:
   * port - The port or named socket to listen on (default: 8080).
-  * host - The hostname or local address to listen on.
+  * host - The hostname or local address to listen on (default: 'localhost'). Pass '::' to listen on all IPv4/IPv6 interfaces.
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * keepAlive - enable [HTTP persistent connection](https://en.wikipedia.org/wiki/HTTP_persistent_connection)
   * timeout - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout.
