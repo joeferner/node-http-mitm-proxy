@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --exit"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",
   "bugs": {
