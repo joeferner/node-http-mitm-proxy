@@ -29,17 +29,17 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "mocha": "^8.2.0",
-    "node-static": "^0.7.10",
-    "request": "^2.83.0"
+    "mocha": "^9.0.2",
+    "node-static": "^0.7.11",
+    "request": "^2.88.2"
   },
   "dependencies": {
     "async": "^3.2.0",
-    "debug": "^4.1.0",
-    "mkdirp": "^0.5.1",
+    "debug": "^4.3.2",
+    "mkdirp": "^0.5.5",
     "node-forge": "^0.10.0",
     "semaphore": "^1.1.0",
-    "ws": "^4.1.0",
-    "yargs": "^16.1.0"
+    "ws": "^7.5.3",
+    "yargs": "^16.2.0"
   }
 }
