@@ -27,9 +27,9 @@ var getHttp = function (url, cb) {
 };
 
 var proxyHttp = function (url, keepAlive, cb) {
-  request({ 
-    url: url, 
-    proxy: 'http://127.0.0.1:' + testProxyPort, 
+  request({
+    url: url,
+    proxy: 'http://127.0.0.1:' + testProxyPort,
     ca: fs.readFileSync(__dirname + '/../.http-mitm-proxy/certs/ca.pem'),
     agentOptions: {
       keepAlive: keepAlive
@@ -65,7 +65,7 @@ describe('proxy', function () {
   ];
   var wss = null;
 
-  before(function () {
+  before(function (done) {
     testFiles.forEach(function (val) {
       testHashes[val] = crypto.createHash('sha256').update(fs.readFileSync(__dirname + '/www/' + val, 'utf8'), 'utf8').digest().toString();
     });
@@ -74,20 +74,22 @@ describe('proxy', function () {
         fileStaticA.serve(req, res);
       }).resume();
     });
-    srvA.listen(testPortA, testHost);
-    srvB = http.createServer(function (req, res) {
-      req.addListener('end', function () {
-        fileStaticB.serve(req, res);
-      }).resume();
-    });
-    srvB.listen(testPortB, testHost);
-    wss = new WebSocket.Server({
-      port: testWSPort,
-    });
-    wss.on('connection', function (ws) {
-      // just reply with the same message
-      ws.on('message', function (message) {
-        ws.send(message);
+    srvA.listen(testPortA, testHost, () => {
+      srvB = http.createServer(function (req, res) {
+        req.addListener('end', function () {
+          fileStaticB.serve(req, res);
+        }).resume();
+      });
+      srvB.listen(testPortB, testHost, () => {
+        wss = new WebSocket.Server({
+          port: testWSPort,
+        }, done);
+        wss.on('connection', function (ws) {
+          // just reply with the same message
+          ws.on('message', function (message) {
+            ws.send(message);
+          });
+        });
       });
     });
   });
@@ -371,8 +373,10 @@ describe('proxy', function () {
     });
 
     it('send + receive message through proxy', function (done) {
-      var ws = new WebSocket('ws://localhost:' + testProxyPort, {
-        host: 'localhost:' + testWSPort,
+      var ws = new WebSocket('ws://localhost:' + testProxyPort,  {
+        headers: {
+          Host: 'localhost:' + testWSPort
+        }
       });
       var testMessage = 'does websocket proxying work?';
       ws.on('open', function () {
@@ -417,7 +421,9 @@ describe('proxy', function () {
       });
 
       var ws = new WebSocket('ws://localhost:' + testProxyPort, {
-        host: 'localhost:' + testWSPort,
+        headers: {
+          host: 'localhost:' + testWSPort
+        }
       });
       var testMessage = 'does rewriting messages work?';
       var rewrittenMessage = 'rewriting messages does work!';
