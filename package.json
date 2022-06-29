@@ -2,17 +2,19 @@
   "name": "http-mitm-proxy",
   "version": "0.10.0",
   "description": "HTTP Man In The Middle (MITM) Proxy",
-  "main": "index.js",
+  "main": "dist/index.js",
   "types": "index.d.ts",
+  "type": "module",
   "scripts": {
-    "test": "mocha --exit"
+    "test": "ts-mocha test/01_proxy.ts --exit",
+    "build": "rimraf dist && tsc"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",
   "bugs": {
     "url": "https://github.com/joeferner/node-http-mitm-proxy/issues"
   },
   "bin": {
-    "http-mitm-proxy": "./bin/mitm-proxy.js"
+    "http-mitm-proxy": "./dist/bin/mitm-proxy.js"
   },
   "keywords": [
     "mitm",
@@ -25,21 +27,33 @@
   "author": "Joe Ferner <joe@fernsroth.com>",
   "contributors": [
     "Félicien François <felicien@tweakstyle.com>",
-    "Simon Pratt <simon@pr4tt.com>"
+    "Simon Pratt <simon@pr4tt.com>",
+    "JonLuca DeCaro <jonluca.decaro@gmail.com>"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=8.0 <=16"
+  },
   "devDependencies": {
-    "mocha": "^9.0.2",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^16.11.41",
+    "mocha": "^10.0.0",
     "node-static": "^0.7.11",
     "request": "^2.88.2"
   },
   "dependencies": {
-    "async": "^3.2.0",
-    "debug": "^4.3.2",
-    "mkdirp": "^0.5.5",
-    "node-forge": "^0.10.0",
+    "async": "^3.2.4",
+    "debug": "^4.3.4",
+    "esm": "^3.2.25",
+    "mkdirp": "^1.0.4",
+    "node-forge": "^1.3.1",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
     "semaphore": "^1.1.0",
-    "ws": "^7.5.3",
-    "yargs": "^16.2.0"
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4",
+    "ws": "^8.8.0",
+    "yargs": "^17.5.1"
   }
 }
