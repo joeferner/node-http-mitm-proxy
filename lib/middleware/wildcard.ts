@@ -3,13 +3,13 @@
  * group2: domain.ext
  * exclude short domains (length < 4) to avoid catching double extensions (ex: net.au, co.uk, ...)
  */
-const HOSTNAME_REGEX = /^(.+)(\.[^\.]{4,}(\.[^\.]{1,3})*\.[^\.]+)$/;
+const HOSTNAME_REGEX = /^(.+)(\.[^.]{4,}(\.[^.]{1,3})*\.[^.]+)$/;
 
 export default {
-  onCertificateRequired: function (hostname, callback) {
-    var rootHost = hostname;
+  onCertificateRequired(hostname, callback) {
+    let rootHost = hostname;
     if (HOSTNAME_REGEX.test(hostname)) {
-      rootHost = hostname.replace(/^[^\.]+\./, "");
+      rootHost = hostname.replace(/^[^.]+\./, "");
     }
     return callback(null, {
       keyFile: this.sslCaDir + "/keys/_." + rootHost + ".key",

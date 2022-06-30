@@ -1,7 +1,7 @@
-import FS, { existsSync } from "fs";
+import FS from "fs";
 import path from "path";
 import Forge from "node-forge";
-const pki = Forge.pki;
+const { pki, md } = Forge;
 import mkdirp from "mkdirp";
 import async from "async";
 
@@ -127,12 +127,12 @@ const ServerExtensions = [
   },
 ] as any[];
 
-class CA {
+export class CA {
   baseCAFolder: string;
   certsFolder: string;
   keysFolder: string;
-  CAcert: ReturnType<typeof Forge.pki.createCertificate>;
-  CAkeys: ReturnType<typeof Forge.pki.rsa.generateKeyPair>;
+  CAcert: ReturnType<typeof pki.createCertificate>;
+  CAkeys: ReturnType<typeof pki.rsa.generateKeyPair>;
 
   static create(caFolder, callback) {
     const ca = new CA();
@@ -173,6 +173,10 @@ class CA {
     return sn;
   }
 
+  getPem() {
+    return pki.certificateToPem(this.CAcert);
+  }
+
   generateCA(callback) {
     const self = this;
     pki.rsa.generateKeyPair({ bits: 2048 }, (err, keys) => {
@@ -191,7 +195,7 @@ class CA {
       cert.setSubject(CAattrs);
       cert.setIssuer(CAattrs);
       cert.setExtensions(CAextensions);
-      cert.sign(keys.privateKey, Forge.md.sha256.create());
+      cert.sign(keys.privateKey, md.sha256.create());
       self.CAcert = cert;
       self.CAkeys = keys;
       async.parallel(
@@ -255,7 +259,9 @@ class CA {
 
   generateServerCertificateKeys(hosts, cb) {
     const self = this;
-    if (typeof hosts === "string") hosts = [hosts];
+    if (typeof hosts === "string") {
+      hosts = [hosts];
+    }
     const mainHost = hosts[0];
     const keysServer = pki.rsa.generateKeyPair(2048);
     const certServer = pki.createCertificate();
@@ -281,7 +287,7 @@ class CA {
         {
           name: "subjectAltName",
           altNames: hosts.map((host) => {
-            if (host.match(/^[\d\.]+$/)) {
+            if (host.match(/^[\d.]+$/)) {
               return { type: 7, ip: host };
             }
             return { type: 2, value: host };
@@ -289,7 +295,7 @@ class CA {
         },
       ])
     );
-    certServer.sign(this.CAkeys.privateKey, Forge.md.sha256.create());
+    certServer.sign(this.CAkeys.privateKey, md.sha256.create());
     const certPem = pki.certificateToPem(certServer);
     const keyPrivatePem = pki.privateKeyToPem(keysServer.privateKey);
     const keyPublicPem = pki.publicKeyToPem(keysServer.publicKey);
@@ -297,33 +303,36 @@ class CA {
       `${this.certsFolder}/${mainHost.replace(/\*/g, "_")}.pem`,
       certPem,
       (error) => {
-        if (error)
+        if (error) {
           console.error(
             `Failed to save certificate to disk in ${self.certsFolder}`,
             error
           );
+        }
       }
     );
     FS.writeFile(
       `${this.keysFolder}/${mainHost.replace(/\*/g, "_")}.key`,
       keyPrivatePem,
       (error) => {
-        if (error)
+        if (error) {
           console.error(
             `Failed to save private key to disk in ${self.keysFolder}`,
             error
           );
+        }
       }
     );
     FS.writeFile(
       `${this.keysFolder}/${mainHost.replace(/\*/g, "_")}.public.key`,
       keyPublicPem,
       (error) => {
-        if (error)
+        if (error) {
           console.error(
             `Failed to save public key to disk in ${self.keysFolder}`,
             error
           );
+        }
       }
     );
     // returns synchronously even before files get written to disk
