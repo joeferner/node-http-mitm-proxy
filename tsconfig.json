@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "CommonJS",
     "lib": [ "es6", "es2017", "esnext"],
-    "sourceMap": true,
     "moduleResolution": "node",
     "removeComments": true,
     "allowSyntheticDefaultImports": true,

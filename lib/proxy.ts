@@ -1,14 +1,18 @@
 import async from "async";
-import net, { AddressInfo } from "net";
-import http, { Server as HTTPServer } from "http";
-import https, { Server } from "https";
+import type { AddressInfo } from "net";
+import net from "net";
+import type { Server as HTTPServer } from "http";
+import http from "http";
+import type { Server } from "https";
+import https from "https";
 import fs from "fs";
 import path from "path";
-import events from "events";
-import WebSocket from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import url from "url";
 import semaphore from "semaphore";
 import ca from "./ca";
+import { ProxyFinalResponseFilter } from "./ProxyFinalResponseFilter";
+import { ProxyFinalRequestFilter } from "./ProxyFinalRequestFilter";
 import { IProxy, IProxyOptions } from "../types";
 
 import gunzip from "./middleware/gunzip";
@@ -16,7 +20,6 @@ import wildcard from "./middleware/wildcard";
 export { wildcard, gunzip };
 
 type HandlerType<T extends (...args: any[]) => any> = Array<Parameters<T>[0]>;
-
 export class Proxy implements IProxy {
   options: IProxyOptions;
   httpPort: number;
@@ -43,7 +46,6 @@ export class Proxy implements IProxy {
   onResponseHeadersHandlers: HandlerType<IProxy["onResponseHeaders"]>;
   onResponseDataHandlers: HandlerType<IProxy["onResponseData"]>;
   onResponseEndHandlers: HandlerType<IProxy["onResponseEnd"]>;
-
   ca: ca;
   sslServers: Record<string, { port: string; server?: Server }>;
   sslSemaphores: Record<string, semaphore>;
@@ -52,6 +54,8 @@ export class Proxy implements IProxy {
   httpsServer: Server;
   wsServer: Server;
   wssServer: Server;
+  static wildcard = wildcard;
+  static gunzip = gunzip;
 
   constructor() {
     this.onConnectHandlers = [];
@@ -71,8 +75,12 @@ export class Proxy implements IProxy {
     this.responseContentPotentiallyModified = false;
   }
 
-  listen(options, callback) {
+  listen(
+    options?: IProxyOptions,
+    callback: (err?: Error) => void = () => undefined
+  ) {
     const self = this;
+
     this.options = options || {};
     this.httpPort = options.port || options.port === 0 ? options.port : 8080;
     this.httpHost = options.host || "localhost";
@@ -108,7 +116,7 @@ export class Proxy implements IProxy {
         "request",
         self._onHttpServerRequest.bind(self, false)
       );
-      self.wsServer = new WebSocket.Server({ server: self.httpServer });
+      self.wsServer = new WebSocketServer({ server: self.httpServer });
       self.wsServer.on(
         "error",
         self._onError.bind(self, "HTTP_SERVER_ERROR", null)
@@ -157,7 +165,7 @@ export class Proxy implements IProxy {
     httpsServer.on("connect", this._onHttpServerConnect.bind(this));
     httpsServer.on("request", this._onHttpServerRequest.bind(this, true));
     const self = this;
-    const wssServer = new WebSocket.Server({ server: httpsServer });
+    const wssServer = new WebSocketServer({ server: httpsServer });
     wssServer.on("connection", (ws, req) => {
       ws.upgradeReq = req;
       self._onWebSocketServerConnect.call(self, true, ws, req);
@@ -167,7 +175,7 @@ export class Proxy implements IProxy {
     // port 0 to get the first available port
     const listenOptions = {
       port: 0,
-      host: undefined,
+      host: "0.0.0.0",
     };
     if (this.httpsPort && !options.hosts) {
       listenOptions.port = this.httpsPort;
@@ -177,12 +185,13 @@ export class Proxy implements IProxy {
     }
 
     httpsServer.listen(listenOptions, () => {
-      if (callback)
+      if (callback) {
         callback(
           (httpsServer.address() as AddressInfo).port,
           httpsServer,
           wssServer
         );
+      }
     });
   }
 
@@ -199,7 +208,9 @@ export class Proxy implements IProxy {
     if (this.sslServers) {
       Object.keys(this.sslServers).forEach((srvName) => {
         const server = self.sslServers[srvName].server;
-        if (server) server.close();
+        if (server) {
+          server.close();
+        }
         delete self.sslServers[srvName];
       });
     }
@@ -238,9 +249,11 @@ export class Proxy implements IProxy {
   onWebSocketSend(fn) {
     this.onWebSocketFrameHandlers.push(
       function (ctx, type, fromServer, data, flags, callback) {
-        if (!fromServer && type === "message")
+        if (!fromServer && type === "message") {
           return this(ctx, data, flags, callback);
-        else callback(null, data, flags);
+        } else {
+          callback(null, data, flags);
+        }
       }.bind(fn)
     );
     return this;
@@ -249,9 +262,11 @@ export class Proxy implements IProxy {
   onWebSocketMessage(fn) {
     this.onWebSocketFrameHandlers.push(
       function (ctx, type, fromServer, data, flags, callback) {
-        if (fromServer && type === "message")
+        if (fromServer && type === "message") {
           return this(ctx, data, flags, callback);
-        else callback(null, data, flags);
+        } else {
+          callback(null, data, flags);
+        }
       }.bind(fn)
     );
     return this;
@@ -340,18 +355,22 @@ export class Proxy implements IProxy {
     if (mod.onWebSocketSend) {
       this.onWebSocketFrame(
         function (ctx, type, fromServer, data, flags, callback) {
-          if (!fromServer && type === "message")
+          if (!fromServer && type === "message") {
             return this(ctx, data, flags, callback);
-          else callback(null, data, flags);
+          } else {
+            callback(null, data, flags);
+          }
         }.bind(mod.onWebSocketSend)
       );
     }
     if (mod.onWebSocketMessage) {
       this.onWebSocketFrame(
         function (ctx, type, fromServer, data, flags, callback) {
-          if (fromServer && type === "message")
+          if (fromServer && type === "message") {
             return this(ctx, data, flags, callback);
-          else callback(null, data, flags);
+          } else {
+            callback(null, data, flags);
+          }
         }.bind(mod.onWebSocketMessage)
       );
     }
@@ -419,60 +438,12 @@ export class Proxy implements IProxy {
     const self = this;
 
     socket.pause();
-
-    /*
-     * Detect TLS from first bytes of data
-     * Inspired from https://gist.github.com/tg-x/835636
-     * used heuristic:
-     * - an incoming connection using SSLv3/TLSv1 records should start with 0x16
-     * - an incoming connection using SSLv2 records should start with the record size
-     *   and as the first record should not be very big we can expect 0x80 or 0x00 (the MSB is a flag)
-     * - everything else is considered to be unencrypted
-     */
-    if (head[0] == 0x16 || head[0] == 0x80 || head[0] == 0x00) {
-      // URL is in the form 'hostname:port'
-      const hostname = req.url.split(":", 2)[0];
-      const sslServer = this.sslServers[hostname];
-      if (sslServer) {
-        return makeConnection(sslServer.port);
-      }
-      const wildcardHost = hostname.replace(/[^\.]+\./, "*.");
-      let sem = self.sslSemaphores[wildcardHost];
-      if (!sem) {
-        sem = self.sslSemaphores[wildcardHost] = semaphore(1);
-      }
-      sem.take(() => {
-        if (self.sslServers[hostname]) {
-          process.nextTick(sem.leave.bind(sem));
-          return makeConnection(self.sslServers[hostname].port);
-        }
-        if (self.sslServers[wildcardHost]) {
-          process.nextTick(sem.leave.bind(sem));
-          self.sslServers[hostname] = {
-            // @ts-ignore
-            port: self.sslServers[wildcardHost],
-          };
-          return makeConnection(self.sslServers[hostname].port);
-        }
-        getHttpsServer(hostname, (err, port) => {
-          process.nextTick(sem.leave.bind(sem));
-          if (err) {
-            console.error(err);
-            return self._onError("OPEN_HTTPS_SERVER_ERROR", null, err);
-          }
-          return makeConnection(port);
-        });
-        delete self.sslSemaphores[wildcardHost];
-      });
-    } else {
-      return makeConnection(this.httpPort);
-    }
-
     function makeConnection(port) {
       // open a TCP connection to the remote host
       const conn = net.connect(
         {
           port,
+          host: "0.0.0.0",
           allowHalfOpen: true,
         },
 
@@ -491,10 +462,12 @@ export class Proxy implements IProxy {
             conn.destroy();
           });
           conn.on("error", (err) => {
+            console.error("Connection error:");
             console.error(err);
             conn.destroy();
           });
           socket.on("error", (err) => {
+            console.error("Socket error:");
             console.error(err);
           });
           socket.pipe(conn);
@@ -547,9 +520,9 @@ export class Proxy implements IProxy {
                   });
                 } else {
                   const ctx = {
-                    hostname: hostname,
-                    files: files,
-                    data: data,
+                    hostname,
+                    files,
+                    data,
                   };
 
                   return self.onCertificateMissing(ctx, files, (err, files) => {
@@ -585,7 +558,7 @@ export class Proxy implements IProxy {
               hosts = [hostname];
             }
             delete results.httpsOptions.hosts;
-            if (self.forceSNI && !hostname.match(/^[\d\.]+$/)) {
+            if (self.forceSNI && !hostname.match(/^[\d.]+$/)) {
               console.debug(`creating SNI context for ${hostname}`);
               hosts.forEach((host) => {
                 self.httpsServer.addContext(host, results.httpsOptions);
@@ -608,7 +581,7 @@ export class Proxy implements IProxy {
                       port,
                     };
                     hosts.forEach((host) => {
-                      self.sslServers[hostname] = sslServer;
+                      self.sslServers[host] = sslServer;
                     });
                     return callback(null, port);
                   }
@@ -620,6 +593,54 @@ export class Proxy implements IProxy {
           }
         );
       });
+    }
+    /*
+     * Detect TLS from first bytes of data
+     * Inspired from https://gist.github.com/tg-x/835636
+     * used heuristic:
+     * - an incoming connection using SSLv3/TLSv1 records should start with 0x16
+     * - an incoming connection using SSLv2 records should start with the record size
+     *   and as the first record should not be very big we can expect 0x80 or 0x00 (the MSB is a flag)
+     * - everything else is considered to be unencrypted
+     */
+    if (head[0] == 0x16 || head[0] == 0x80 || head[0] == 0x00) {
+      // URL is in the form 'hostname:port'
+      const hostname = req.url.split(":", 2)[0];
+      const sslServer = this.sslServers[hostname];
+      if (sslServer) {
+        return makeConnection(sslServer.port);
+      }
+      const wildcardHost = hostname.replace(/[^.]+\./, "*.");
+      let sem = self.sslSemaphores[wildcardHost];
+      if (!sem) {
+        sem = self.sslSemaphores[wildcardHost] = semaphore(1);
+      }
+      sem.take(() => {
+        if (self.sslServers[hostname]) {
+          process.nextTick(sem.leave.bind(sem));
+          return makeConnection(self.sslServers[hostname].port);
+        }
+        if (self.sslServers[wildcardHost]) {
+          process.nextTick(sem.leave.bind(sem));
+          self.sslServers[hostname] = {
+            // @ts-ignore
+            port: self.sslServers[wildcardHost],
+          };
+          return makeConnection(self.sslServers[hostname].port);
+        }
+        getHttpsServer(hostname, (err, port) => {
+          process.nextTick(sem.leave.bind(sem));
+          if (err) {
+            console.error("Error getting HTTPs server");
+            console.error(err);
+            return self._onError("OPEN_HTTPS_SERVER_ERROR", null, err);
+          }
+          return makeConnection(port);
+        });
+        delete self.sslSemaphores[wildcardHost];
+      });
+    } else {
+      return makeConnection(this.httpPort);
     }
   }
 
@@ -641,7 +662,6 @@ export class Proxy implements IProxy {
         hosts,
       });
     });
-    return this;
   }
 
   _onError(kind, ctx, err) {
@@ -683,9 +703,11 @@ export class Proxy implements IProxy {
       onWebSocketSend(fn) {
         ctx.onWebSocketFrameHandlers.push(
           function (ctx, type, fromServer, data, flags, callback) {
-            if (!fromServer && type === "message")
+            if (!fromServer && type === "message") {
               return this(ctx, data, flags, callback);
-            else callback(null, data, flags);
+            } else {
+              callback(null, data, flags);
+            }
           }.bind(fn)
         );
         return ctx;
@@ -693,9 +715,11 @@ export class Proxy implements IProxy {
       onWebSocketMessage(fn) {
         ctx.onWebSocketFrameHandlers.push(
           function (ctx, type, fromServer, data, flags, callback) {
-            if (fromServer && type === "message")
+            if (fromServer && type === "message") {
               return this(ctx, data, flags, callback);
-            else callback(null, data, flags);
+            } else {
+              callback(null, data, flags);
+            }
           }.bind(fn)
         );
         return ctx;
@@ -719,18 +743,22 @@ export class Proxy implements IProxy {
         if (mod.onWebSocketSend) {
           ctx.onWebSocketFrame(
             function (ctx, type, fromServer, data, flags, callback) {
-              if (!fromServer && type === "message")
+              if (!fromServer && type === "message") {
                 return this(ctx, data, flags, callback);
-              else callback(null, data, flags);
+              } else {
+                callback(null, data, flags);
+              }
             }.bind(mod.onWebSocketSend)
           );
         }
         if (mod.onWebSocketMessage) {
           ctx.onWebSocketFrame(
             function (ctx, type, fromServer, data, flags, callback) {
-              if (fromServer && type === "message")
+              if (fromServer && type === "message") {
                 return this(ctx, data, flags, callback);
-              else callback(null, data, flags);
+              } else {
+                callback(null, data, flags);
+              }
             }.bind(mod.onWebSocketMessage)
           );
         }
@@ -793,13 +821,6 @@ export class Proxy implements IProxy {
       agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
       headers: ptosHeaders,
     };
-    return self._onWebSocketConnection(ctx, (err) => {
-      if (err) {
-        return self._onWebSocketError(ctx, err);
-      }
-      return makeProxyToServerWebSocket();
-    });
-
     function makeProxyToServerWebSocket() {
       ctx.proxyToServerWebSocket = new WebSocket(
         ctx.proxyToServerWebSocketOptions.url,
@@ -835,6 +856,13 @@ export class Proxy implements IProxy {
         }
       });
     }
+
+    return self._onWebSocketConnection(ctx, (err) => {
+      if (err) {
+        return self._onWebSocketError(ctx, err);
+      }
+      return makeProxyToServerWebSocket();
+    });
   }
 
   _onHttpServerRequest(isSSL, clientToProxyRequest, proxyToClientResponse) {
@@ -939,67 +967,6 @@ export class Proxy implements IProxy {
       ctx.clientToProxyRequest,
       ctx.isSSL ? 443 : 80
     );
-    if (hostPort === null) {
-      ctx.clientToProxyRequest.resume();
-      ctx.proxyToClientResponse.writeHeader(400, {
-        "Content-Type": "text/html; charset=utf-8",
-      });
-      ctx.proxyToClientResponse.end("Bad request: Host missing...", "UTF-8");
-    } else {
-      const headers = {};
-      for (const h in ctx.clientToProxyRequest.headers) {
-        // don't forward proxy-headers
-        if (!/^proxy\-/i.test(h)) {
-          headers[h] = ctx.clientToProxyRequest.headers[h];
-        }
-      }
-      if (this.options.forceChunkedRequest) {
-        delete headers["content-length"];
-      }
-
-      ctx.proxyToServerRequestOptions = {
-        method: ctx.clientToProxyRequest.method,
-        path: ctx.clientToProxyRequest.url,
-        host: hostPort.host,
-        port: hostPort.port,
-        headers,
-        agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
-      };
-      return self._onRequest(ctx, (err) => {
-        if (err) {
-          return self._onError("ON_REQUEST_ERROR", ctx, err);
-        }
-        return self._onRequestHeaders(ctx, (err) => {
-          if (err) {
-            return self._onError("ON_REQUESTHEADERS_ERROR", ctx, err);
-          }
-          return makeProxyToServerRequest();
-        });
-      });
-    }
-
-    function makeProxyToServerRequest() {
-      const proto = ctx.isSSL ? https : http;
-      ctx.proxyToServerRequest = proto.request(
-        ctx.proxyToServerRequestOptions,
-        proxyToServerRequestComplete
-      );
-      ctx.proxyToServerRequest.on(
-        "error",
-        self._onError.bind(self, "PROXY_TO_SERVER_REQUEST_ERROR", ctx)
-      );
-      ctx.requestFilters.push(new ProxyFinalRequestFilter(self, ctx));
-      let prevRequestPipeElem = ctx.clientToProxyRequest;
-      ctx.requestFilters.forEach((filter) => {
-        filter.on(
-          "error",
-          self._onError.bind(self, "REQUEST_FILTER_ERROR", ctx)
-        );
-        prevRequestPipeElem = prevRequestPipeElem.pipe(filter);
-      });
-      ctx.clientToProxyRequest.resume();
-    }
-
     function proxyToServerRequestComplete(serverToProxyResponse) {
       serverToProxyResponse.on(
         "error",
@@ -1046,6 +1013,67 @@ export class Proxy implements IProxy {
             prevResponsePipeElem = prevResponsePipeElem.pipe(filter);
           });
           return ctx.serverToProxyResponse.resume();
+        });
+      });
+    }
+
+    function makeProxyToServerRequest() {
+      const proto = ctx.isSSL ? https : http;
+      ctx.proxyToServerRequest = proto.request(
+        ctx.proxyToServerRequestOptions,
+        proxyToServerRequestComplete
+      );
+      ctx.proxyToServerRequest.on(
+        "error",
+        self._onError.bind(self, "PROXY_TO_SERVER_REQUEST_ERROR", ctx)
+      );
+      ctx.requestFilters.push(new ProxyFinalRequestFilter(self, ctx));
+      let prevRequestPipeElem = ctx.clientToProxyRequest;
+      ctx.requestFilters.forEach((filter) => {
+        filter.on(
+          "error",
+          self._onError.bind(self, "REQUEST_FILTER_ERROR", ctx)
+        );
+        prevRequestPipeElem = prevRequestPipeElem.pipe(filter);
+      });
+      ctx.clientToProxyRequest.resume();
+    }
+
+    if (hostPort === null) {
+      ctx.clientToProxyRequest.resume();
+      ctx.proxyToClientResponse.writeHeader(400, {
+        "Content-Type": "text/html; charset=utf-8",
+      });
+      ctx.proxyToClientResponse.end("Bad request: Host missing...", "UTF-8");
+    } else {
+      const headers = {};
+      for (const h in ctx.clientToProxyRequest.headers) {
+        // don't forward proxy-headers
+        if (!/^proxy-/i.test(h)) {
+          headers[h] = ctx.clientToProxyRequest.headers[h];
+        }
+      }
+      if (this.options.forceChunkedRequest) {
+        delete headers["content-length"];
+      }
+
+      ctx.proxyToServerRequestOptions = {
+        method: ctx.clientToProxyRequest.method,
+        path: ctx.clientToProxyRequest.url,
+        host: hostPort.host,
+        port: hostPort.port,
+        headers,
+        agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
+      };
+      return self._onRequest(ctx, (err) => {
+        if (err) {
+          return self._onError("ON_REQUEST_ERROR", ctx, err);
+        }
+        return self._onRequestHeaders(ctx, (err) => {
+          if (err) {
+            return self._onError("ON_REQUESTHEADERS_ERROR", ctx, err);
+          }
+          return makeProxyToServerRequest();
         });
       });
     }
@@ -1244,7 +1272,6 @@ export class Proxy implements IProxy {
   }
 
   _onResponseData(ctx, chunk, callback) {
-    const self = this;
     async.forEach(
       this.onResponseDataHandlers.concat(ctx.onResponseDataHandlers),
       (fn, callback) =>
@@ -1257,7 +1284,7 @@ export class Proxy implements IProxy {
         }),
       (err) => {
         if (err) {
-          return self._onError("ON_RESPONSE_DATA_ERROR", ctx, err);
+          return this._onError("ON_RESPONSE_DATA_ERROR", ctx, err);
         }
         return callback(null, chunk);
       }
@@ -1265,13 +1292,12 @@ export class Proxy implements IProxy {
   }
 
   _onResponseEnd(ctx, callback) {
-    const self = this;
     async.forEach(
       this.onResponseEndHandlers.concat(ctx.onResponseEndHandlers),
       (fn, callback) => fn(ctx, callback),
       (err) => {
         if (err) {
-          return self._onError("ON_RESPONSE_END_ERROR", ctx, err);
+          return this._onError("ON_RESPONSE_END_ERROR", ctx, err);
         }
         return callback(null);
       }
@@ -1279,7 +1305,7 @@ export class Proxy implements IProxy {
   }
 
   static parseHostAndPort(req, defaultPort?: number) {
-    const m = req.url.match(/^http:\/\/([^\/]+)(.*)/);
+    const m = req.url.match(/^http:\/\/([^/]+)(.*)/);
     if (m) {
       req.url = m[2] || "/";
       return Proxy.parseHost(m[1], defaultPort);
@@ -1314,7 +1340,7 @@ export class Proxy implements IProxy {
     const headers = {};
     for (const key in originalHeaders) {
       const canonizedKey = key.trim();
-      if (/^public\-key\-pins/i.test(canonizedKey)) {
+      if (/^public-key-pins/i.test(canonizedKey)) {
         // HPKP header => filter
         continue;
       }
@@ -1325,98 +1351,4 @@ export class Proxy implements IProxy {
     return headers;
   }
 }
-
 export default Proxy;
-class ProxyFinalRequestFilter extends events.EventEmitter {
-  writable: boolean;
-  write: any;
-  end: any;
-  constructor(proxy, ctx) {
-    super();
-    this.writable = true;
-    this.write = (chunk) => {
-      proxy._onRequestData(ctx, chunk, (err, chunk) => {
-        if (err) {
-          return proxy._onError("ON_REQUEST_DATA_ERROR", ctx, err);
-        }
-        if (chunk) {
-          return ctx.proxyToServerRequest.write(chunk);
-        }
-      });
-      return true;
-    };
-
-    this.end = (chunk) => {
-      if (chunk) {
-        return proxy._onRequestData(ctx, chunk, (err, chunk) => {
-          if (err) {
-            return proxy._onError("ON_REQUEST_DATA_ERROR", ctx, err);
-          }
-
-          return proxy._onRequestEnd(ctx, (err) => {
-            if (err) {
-              return proxy._onError("ON_REQUEST_END_ERROR", ctx, err);
-            }
-            return ctx.proxyToServerRequest.end(chunk);
-          });
-        });
-      } else {
-        return proxy._onRequestEnd(ctx, (err) => {
-          if (err) {
-            return proxy._onError("ON_REQUEST_END_ERROR", ctx, err);
-          }
-          return ctx.proxyToServerRequest.end(chunk || undefined);
-        });
-      }
-    };
-  }
-}
-
-class ProxyFinalResponseFilter extends events.EventEmitter {
-  writable: boolean;
-  write: any;
-  end: any;
-  constructor(proxy, ctx) {
-    super();
-
-    this.writable = true;
-
-    this.write = function (chunk) {
-      proxy._onResponseData(ctx, chunk, function (err, chunk) {
-        if (err) {
-          return proxy._onError("ON_RESPONSE_DATA_ERROR", ctx, err);
-        }
-        if (chunk) {
-          return ctx.proxyToClientResponse.write(chunk);
-        }
-      });
-      return true;
-    };
-
-    this.end = function (chunk) {
-      if (chunk) {
-        return proxy._onResponseData(ctx, chunk, function (err, chunk) {
-          if (err) {
-            return proxy._onError("ON_RESPONSE_DATA_ERROR", ctx, err);
-          }
-
-          return proxy._onResponseEnd(ctx, function (err) {
-            if (err) {
-              return proxy._onError("ON_RESPONSE_END_ERROR", ctx, err);
-            }
-            return ctx.proxyToClientResponse.end(chunk || undefined);
-          });
-        });
-      } else {
-        return proxy._onResponseEnd(ctx, function (err) {
-          if (err) {
-            return proxy._onError("ON_RESPONSE_END_ERROR", ctx, err);
-          }
-          return ctx.proxyToClientResponse.end(chunk || undefined);
-        });
-      }
-    };
-
-    return this;
-  }
-}
