@@ -1,9 +1,9 @@
 import FS from "fs";
 import path from "path";
-import Forge from "node-forge";
-const { pki, md } = Forge;
+import { pki, md } from "node-forge";
 import mkdirp from "mkdirp";
 import async from "async";
+import ErrnoException = NodeJS.ErrnoException;
 
 const CAattrs = [
   {
@@ -127,12 +127,12 @@ const ServerExtensions = [
   },
 ] as any[];
 
-export class CA {
-  baseCAFolder: string;
-  certsFolder: string;
-  keysFolder: string;
-  CAcert: ReturnType<typeof pki.createCertificate>;
-  CAkeys: ReturnType<typeof pki.rsa.generateKeyPair>;
+class CA {
+  baseCAFolder!: string;
+  certsFolder!: string;
+  keysFolder!: string;
+  CAcert!: ReturnType<typeof pki.createCertificate>;
+  CAkeys!: ReturnType<typeof pki.rsa.generateKeyPair>;
 
   static create(caFolder, callback) {
     const ca = new CA();
@@ -177,7 +177,12 @@ export class CA {
     return pki.certificateToPem(this.CAcert);
   }
 
-  generateCA(callback) {
+  generateCA(
+    callback: (
+      err?: ErrnoException | null | undefined,
+      results?: unknown[] | undefined
+    ) => void
+  ) {
     const self = this;
     pki.rsa.generateKeyPair({ bits: 2048 }, (err, keys) => {
       if (err) {
@@ -198,30 +203,28 @@ export class CA {
       cert.sign(keys.privateKey, md.sha256.create());
       self.CAcert = cert;
       self.CAkeys = keys;
-      async.parallel(
-        [
-          FS.writeFile.bind(
-            null,
-            path.join(self.certsFolder, "ca.pem"),
-            pki.certificateToPem(cert)
-          ),
-          FS.writeFile.bind(
-            null,
-            path.join(self.keysFolder, "ca.private.key"),
-            pki.privateKeyToPem(keys.privateKey)
-          ),
-          FS.writeFile.bind(
-            null,
-            path.join(self.keysFolder, "ca.public.key"),
-            pki.publicKeyToPem(keys.publicKey)
-          ),
-        ],
-        callback
-      );
+      const tasks = [
+        FS.writeFile.bind(
+          null,
+          path.join(self.certsFolder, "ca.pem"),
+          pki.certificateToPem(cert)
+        ),
+        FS.writeFile.bind(
+          null,
+          path.join(self.keysFolder, "ca.private.key"),
+          pki.privateKeyToPem(keys.privateKey)
+        ),
+        FS.writeFile.bind(
+          null,
+          path.join(self.keysFolder, "ca.public.key"),
+          pki.publicKeyToPem(keys.publicKey)
+        ),
+      ];
+      async.parallel(tasks, callback);
     });
   }
 
-  loadCA(callback) {
+  loadCA(callback: Function) {
     const self = this;
     async.auto(
       {
@@ -243,21 +246,26 @@ export class CA {
           );
         },
       },
-      (err, results) => {
+      (
+        err,
+        results:
+          | { certPEM: string; keyPrivatePEM: string; keyPublicPEM: string }
+          | undefined
+      ) => {
         if (err) {
           return callback(err);
         }
-        self.CAcert = pki.certificateFromPem(results.certPEM);
+        self.CAcert = pki.certificateFromPem(results!.certPEM);
         self.CAkeys = {
-          privateKey: pki.privateKeyFromPem(results.keyPrivatePEM),
-          publicKey: pki.publicKeyFromPem(results.keyPublicPEM),
+          privateKey: pki.privateKeyFromPem(results!.keyPrivatePEM),
+          publicKey: pki.publicKeyFromPem(results!.keyPublicPEM),
         };
         return callback();
       }
     );
   }
 
-  generateServerCertificateKeys(hosts, cb) {
+  generateServerCertificateKeys(hosts: string | string[], cb) {
     const self = this;
     if (typeof hosts === "string") {
       hosts = [hosts];

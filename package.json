@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "ts-mocha test/01_proxy.ts --exit",
+    "test": "TS_NODE_TRANSPILE_ONLY=true TS_NODE_PRETTY=true ts-mocha test/01_proxy.ts --exit",
     "build": "rimraf dist && tsc"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",

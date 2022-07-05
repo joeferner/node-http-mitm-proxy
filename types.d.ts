@@ -1,8 +1,9 @@
-//definitions by jason swearingen.  jasons aat novaleaf doot coom.  for node-htt-mitm-proxy v0.5.2.
-
 import http = require("http");
 import https = require("https");
-import net = require("net");
+import type CA from "../lib/ca";
+import type WebSocket from "ws";
+import type { Server } from "https";
+import type { WebSocket as WebSocketType, WebSocketServer } from "ws";
 
 declare namespace HttpMitmProxy {
   export interface IProxyStatic {
@@ -36,98 +37,120 @@ declare namespace HttpMitmProxy {
     forceChunkedRequest?: boolean;
   }
 
+  export interface IProxySSLServer {
+    port: number;
+    server?: Server;
+    wsServer?: WebSocketServer;
+  }
+  export type ICreateServerCallback = (
+    port: number,
+    server: Server,
+    wssServer: WebSocketServer
+  ) => void;
+  export type ErrorCallback = (error?: Error | null, data?: any) => void;
+  type OnRequestParams = (ctx: IContext, callback: ErrorCallback) => void;
+  type OnWebsocketRequestParams = (
+    ctx: IWebSocketContext,
+    callback: ErrorCallback
+  ) => void;
+  type IWebSocketCallback = (
+    err: MaybeError,
+    message?: any,
+    flags?: any
+  ) => void;
+  type OnWebSocketSendParams = (
+    ctx: IWebSocketContext,
+    message: any,
+    flags: any,
+    callback: IWebSocketCallback
+  ) => void;
+  type OnWebSocketMessageParams = (
+    ctx: IWebSocketContext,
+    message: any,
+    flags: any,
+    callback: IWebSocketCallback
+  ) => void;
+  type OnWebSocketFrameParams = (
+    ctx: IWebSocketContext,
+    type: any,
+    fromServer: boolean,
+    message: any,
+    flags: any,
+    callback: IWebSocketCallback
+  ) => void;
+  type OnWebSocketErrorParams = (
+    ctx: IWebSocketContext,
+    err: MaybeError
+  ) => void;
+  type OnWebSocketCloseParams = (
+    ctx: IWebSocketContext,
+    code: any,
+    message: any,
+    callback: IWebSocketCallback
+  ) => void;
+
+  interface ICertDetails {
+    keyFile: string;
+    certFile: string;
+    hosts: string[];
+  }
+
+  type MaybeError = Error | null | undefined;
+  type OnCertificateMissingCallback = (
+    error: MaybeError,
+    certDetails: ICertDetails
+  ) => void;
+  type OnCertificateRequiredCallback = (
+    error: MaybeError,
+    certDetails: ICertDetails
+  ) => void;
+  type OnRequestDataCallback = (error?: MaybeError, chunk?: Buffer) => void;
+  type OnRequestDataParams = (
+    ctx: IContext,
+    chunk: Buffer,
+    callback: OnRequestDataCallback
+  ) => void;
+  type OnErrorParams = (
+    context: IContext | null,
+    err?: MaybeError,
+    errorKind?: string
+  ) => void;
+  type OnConnectParams = (
+    req: http.IncomingMessage,
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    socket: import("stream").Duplex,
+    head: any,
+    callback: ErrorCallback
+  ) => void;
   export type IProxy = ICallbacks & {
-    /** Starts the proxy listening on the given port..  example: proxy.listen({ port: 80 }); */
-    listen(
-      /** An object with the following options: */ options?: IProxyOptions,
-      callback?: (err?: Error) => void
-    ): void;
+    /** Starts the proxy listening on the given port.  example: proxy.listen({ port: 80 }); */
+    listen(options?: IProxyOptions, callback?: () => void): void;
+
     /** proxy.close
-         Stops the proxy listening.
-        
-         Example
-        
-         proxy.close(); */
+     Stops the proxy listening.
+
+     Example
+
+     proxy.close(); */
     close(): void;
 
     onCertificateRequired(
       hostname: string,
-      callback: (
-        error: Error | undefined,
-        certDetails: { keyFile: string; certFile: string; hosts: string[] }
-      ) => void
+      callback: OnCertificateRequiredCallback
     ): void;
     onCertificateMissing(
-      ctx: IContext,
+      ctx: ICertficateContext,
       files: any,
-      callback: (
-        error: Error | undefined,
-        certDetails: {
-          keyFileData: string;
-          certFileData: string;
-          hosts: string[];
-        }
-      ) => void
+      callback: OnCertificateMissingCallback
     ): void;
 
-    //undocumented helpers
-    onConnect(
-      fcn: (
-        req: http.IncomingMessage,
-        socket: net.Socket,
-        head: any,
-        callback: (error?: Error) => void
-      ) => void
-    ): void;
-    onRequestHeaders(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
-    onResponseHeaders(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
-    onWebSocketConnection(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
-    onWebSocketSend(
-      fcn: (
-        ctx: IContext,
-        message: any,
-        flags: any,
-        callback: (err: Error | undefined, message: any, flags: any) => void
-      ) => void
-    ): void;
-    onWebSocketMessage(
-      fcn: (
-        ctx: IContext,
-        message: any,
-        flags: any,
-        callback: (err: Error | undefined, message: any, flags: any) => void
-      ) => void
-    ): void;
-    onWebSocketFrame(
-      fcn: (
-        ctx: IContext,
-        type: any,
-        fromServer: boolean,
-        message: any,
-        flags: any,
-        callback: (err: Error | undefined, message: any, flags: any) => void
-      ) => void
-    ): void;
-    onWebSocketError(
-      fcn: (ctx: IContext, err: Error | undefined) => void
-    ): void;
-    onWebSocketClose(
-      fcn: (
-        ctx: IContext,
-        code: any,
-        message: any,
-        callback: (err: Error | undefined, code: any, message: any) => void
-      ) => void
-    ): void;
-
-    // onConnectHandlers:((req,socket,head,callback)=>void)[];
-    // onRequestHandlers:((ctx,callback)=>void)[];
+    onConnect(fcn: OnConnectParams): void;
+    onWebSocketConnection(fcn: OnWebsocketRequestParams): void;
+    onWebSocketSend(fcn: OnWebSocketSendParams): void;
+    onWebSocketMessage(fcn: OnWebSocketMessageParams): void;
+    onWebSocketFrame(fcn: OnWebSocketFrameParams): void;
+    onWebSocketError(fcn: OnWebSocketErrorParams): void;
+    onWebSocketClose(fcn: OnWebSocketCloseParams): void;
 
     options: IProxyOptions;
     httpPort: number;
@@ -138,83 +161,62 @@ declare namespace HttpMitmProxy {
     forceSNI: boolean;
     httpsPort?: number;
     sslCaDir: string;
+    ca: CA;
   };
 
   /** signatures for various callback functions */
   export interface ICallbacks {
-    onError(
-      /**Adds a function to the list of functions to get called if an error occures.
+    /**Adds a function to the list of functions to get called if an error occures.
 
- Arguments
+     Arguments
 
- fn(ctx, err, errorKind) - The function to be called on an error.*/ callback: (
-        context: IContext,
-        err?: Error,
-        errorKind?: string
-      ) => void
-    ): void;
+     fn(ctx, err, errorKind) - The function to be called on an error.*/
+    onError(callback: OnErrorParams): void;
 
     /** Adds a function to get called at the beginning of a request.
-        
-         Arguments
-        
-         fn(ctx, callback) - The function that gets called on each request.
-         Example
-        
-         proxy.onRequest(function(ctx, callback) {
+
+     Arguments
+
+     fn(ctx, callback) - The function that gets called on each request.
+     Example
+
+     proxy.onRequest(function(ctx, callback) {
            console.log('REQUEST:', ctx.clientToProxyRequest.url);
            return callback();
          }); */
-    onRequest(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
+    onRequest(fcn: OnRequestParams): void;
 
-    onRequestData(
-      fcn: (
-        ctx: IContext,
-        chunk: Buffer,
-        callback: (error?: Error, chunk?: Buffer) => void
-      ) => void
-    ): void;
+    onRequestHeaders(fcn: OnRequestParams): void;
+    onResponseHeaders(fcn: OnRequestParams): void;
 
-    onRequestEnd(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
+    onRequestData(fcn: OnRequestDataParams): void;
+
+    onRequestEnd(fcn: OnRequestParams): void;
     /** Adds a function to get called at the beginning of the response.
-        
-         Arguments
-        
-         fn(ctx, callback) - The function that gets called on each response.
-         Example
-        
-         proxy.onResponse(function(ctx, callback) {
+
+     Arguments
+
+     fn(ctx, callback) - The function that gets called on each response.
+     Example
+
+     proxy.onResponse(function(ctx, callback) {
            console.log('BEGIN RESPONSE');
            return callback();
          }); */
-    onResponse(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
+    onResponse(fcn: OnRequestParams): void;
 
-    onResponseData(
-      fcn: (
-        ctx: IContext,
-        chunk: Buffer,
-        callback: (error?: Error, chunk?: Buffer) => void
-      ) => void
-    ): void;
+    onResponseData(fcn: OnRequestDataParams): void;
 
-    onResponseEnd(
-      fcn: (ctx: IContext, callback: (error?: Error) => void) => void
-    ): void;
+    onResponseEnd(fcn: OnRequestParams): void;
 
     /** Adds a module into the proxy. Modules encapsulate multiple life cycle processing functions into one object.
 
-             Arguments
+     Arguments
 
-             module - The module to add. Modules contain a hash of functions to add.
-             Example
+     module - The module to add. Modules contain a hash of functions to add.
+     Example
 
-             proxy.use({
+     proxy.use({
              onError: function(ctx, err) { },
              onCertificateRequired: function(hostname, callback) { return callback(); },
              onCertificateMissing: function(ctx, files, callback) { return callback(); },
@@ -228,31 +230,24 @@ declare namespace HttpMitmProxy {
              onWebSocketError: function(ctx, err) {  },
              onWebSocketClose: function(ctx, code, message, callback) {  },
              });
-             node-http-mitm-proxy provide some ready to use modules:
+     node-http-mitm-proxy provide some ready to use modules:
 
-             Proxy.gunzip Gunzip response filter (uncompress gzipped content before onResponseData and compress back after)
-             Proxy.wildcard Generates wilcard certificates by default (so less certificates are generated) */
+     Proxy.gunzip Gunzip response filter (uncompress gzipped content before onResponseData and compress back after)
+     Proxy.wildcard Generates wilcard certificates by default (so less certificates are generated) */
     use(mod: any): void;
   }
 
-  export type IContext = ICallbacks & {
+  interface IBaseContext {
     isSSL: boolean;
+    uuid: string;
 
     /** may be set to true/false when dealing with websockets. */
     closedByServer?: boolean;
+    closedByClient?: boolean;
 
-    clientToProxyRequest: http.IncomingMessage;
-    proxyToClientResponse: http.ServerResponse;
-    proxyToServerRequest: http.ClientRequest;
-    serverToProxyResponse: http.IncomingMessage;
-
-    /** instance of WebSocket object from https://github.com/websockets/ws */
-    clientToProxyWebSocket: any;
-    /** instance of WebSocket object from https://github.com/websockets/ws */
-    proxyToServerWebSocket: any;
-
+    connectRequest: http.IncomingMessage;
     /** user defined tags, initially constructed in the proxy-internals.tx proxy.onRequest() callback, you can add what you like here. */
-    tags: {
+    tags?: {
       id: number;
       uri: string;
       /** ln 743 of proxy.js, hack to retry */
@@ -262,48 +257,95 @@ declare namespace HttpMitmProxy {
       [key: string]: any;
     };
 
-    /**Adds a stream into the request body stream.
+    use(mod: any): void;
+  }
 
- Arguments
+  export type IContext = ICallbacks &
+    IBaseContext & {
+      clientToProxyRequest: http.IncomingMessage;
+      proxyToClientResponse: http.ServerResponse;
+      proxyToServerRequest: http.ClientRequest | undefined;
+      serverToProxyResponse: http.IncomingMessage | undefined;
 
- stream - The read/write stream to add in the request body stream.
- Example
+      /**Adds a stream into the request body stream.
 
- ctx.addRequestFilter(zlib.createGunzip()); */
-    addRequestFilter(stream: any): void;
-    /** Adds a stream into the response body stream.
+     Arguments
 
- Arguments
+     stream - The read/write stream to add in the request body stream.
+     Example
 
- stream - The read/write stream to add in the response body stream.
- Example
+     ctx.addRequestFilter(zlib.createGunzip()); */
+      addRequestFilter(stream: any): void;
+      /** Adds a stream into the response body stream.
 
- ctx.addResponseFilter(zlib.createGunzip()); */
-    addResponseFilter(stream: any): void;
+     Arguments
 
-    /** filters added by .addRequestFilter() */
-    requestFilters: any[];
+     stream - The read/write stream to add in the response body stream.
+     Example
 
-    /** filters added by .addResponseFilter() */
-    responseFilters: any[];
+     ctx.addResponseFilter(zlib.createGunzip()); */
+      addResponseFilter(stream: any): void;
 
-    /** undocumented, allows adjusting the request in callbacks (such as .onRequest()) before sending  upstream (to proxy or target host)..
-     * FYI these values seem pre-populated with defaults based on the request, you can modify them to change behavior. */
-    proxyToServerRequestOptions: {
-      /** ex: "GET" */
-      method: string;
-      /** ex: "/success.txt" */
-      path: string;
+      /** filters added by .addRequestFilter() */
+      requestFilters: any[];
 
-      /** example: "detectportal.firefox.com" */
-      host: string;
-      port: null;
-      headers: { [key: string]: string };
-      agent: http.Agent;
+      /** filters added by .addResponseFilter() */
+      responseFilters: any[];
+
+      /** undocumented, allows adjusting the request in callbacks (such as .onRequest()) before sending  upstream (to proxy or target host)..
+       * FYI these values seem pre-populated with defaults based on the request, you can modify them to change behavior. */
+      proxyToServerRequestOptions:
+        | undefined
+        | {
+            /** ex: "GET" */
+            method: string;
+            /** ex: "/success.txt" */
+            path: string;
+
+            /** example: "detectportal.firefox.com" */
+            host: string;
+            port: string | number | null | undefined;
+            headers: { [key: string]: string };
+            agent: http.Agent;
+          };
+
+      onRequestHandlers: OnRequestParams[];
+      onResponseHandlers: OnRequestParams[];
+      onErrorHandlers: OnErrorParams[];
+      onRequestDataHandlers: OnRequestDataParams[];
+      onResponseDataHandlers: OnRequestDataParams[];
+      onRequestEndHandlers: OnRequestParams[];
+      onResponseEndHandlers: OnRequestParams[];
+      onRequestHeadersHandlers: OnRequestParams[];
+      onResponseHeadersHandlers: OnRequestParams[];
+      responseContentPotentiallyModified: boolean;
     };
 
-    onResponseDataHandlers: Function[];
-    onResponseEndHandlers: Function[];
+  export interface ICertficateContext {
+    hostname: string;
+    files: ICertDetails;
+    data: { keyFileExists: boolean; certFileExists: boolean };
+  }
+
+  export type IWebSocketContext = IBaseContext & {
+    /** instance of WebSocket object from https://github.com/websockets/ws */
+    clientToProxyWebSocket?: WebSocketType;
+    /** instance of WebSocket object from https://github.com/websockets/ws */
+    proxyToServerWebSocket?: WebSocketType;
+
+    proxyToServerWebSocketOptions?: WebSocket.ClientOptions & { url?: string };
+    /** WebSocket Connection Hanlders */
+    onWebSocketConnectionHandlers: OnWebsocketRequestParams[];
+    onWebSocketFrameHandlers: OnWebSocketFrameParams[];
+    onWebSocketCloseHandlers: OnWebSocketCloseParams[];
+    onWebSocketErrorHandlers: OnWebSocketErrorParams[];
+
+    onWebSocketConnection: (ws: OnWebsocketRequestParams) => void;
+    onWebSocketSend: (ws: OnWebSocketSendParams) => void;
+    onWebSocketMessage: (ws: OnWebSocketMessageParams) => void;
+    onWebSocketFrame: (ws: OnWebSocketFrameParams) => void;
+    onWebSocketClose: (ws: OnWebSocketCloseParams) => void;
+    onWebSocketError: (ws: OnWebSocketErrorParams) => void;
   };
 }
 
