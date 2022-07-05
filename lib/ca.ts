@@ -1,6 +1,7 @@
 import FS from "fs";
 import path from "path";
-import { pki, md } from "node-forge";
+import Forge from "node-forge";
+const { pki, md } = Forge;
 import mkdirp from "mkdirp";
 import async from "async";
 import ErrnoException = NodeJS.ErrnoException;
@@ -127,12 +128,12 @@ const ServerExtensions = [
   },
 ] as any[];
 
-class CA {
+export class CA {
   baseCAFolder!: string;
   certsFolder!: string;
   keysFolder!: string;
-  CAcert!: ReturnType<typeof pki.createCertificate>;
-  CAkeys!: ReturnType<typeof pki.rsa.generateKeyPair>;
+  CAcert!: ReturnType<typeof Forge.pki.createCertificate>;
+  CAkeys!: ReturnType<typeof Forge.pki.rsa.generateKeyPair>;
 
   static create(caFolder, callback) {
     const ca = new CA();
