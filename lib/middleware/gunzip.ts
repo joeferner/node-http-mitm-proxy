@@ -1,18 +1,19 @@
 import zlib from "zlib";
+import type { IContext } from "../../types";
 
 export default {
-  onResponse(ctx, callback) {
+  onResponse(ctx: IContext, callback: Function) {
+    const serverToProxyResponse = ctx.serverToProxyResponse!;
     if (
-      ctx.serverToProxyResponse.headers["content-encoding"] &&
-      ctx.serverToProxyResponse.headers["content-encoding"].toLowerCase() == "gzip"
+      serverToProxyResponse.headers["content-encoding"]?.toLowerCase() == "gzip"
     ) {
-      delete ctx.serverToProxyResponse.headers["content-encoding"];
+      delete serverToProxyResponse.headers["content-encoding"];
       ctx.addResponseFilter(zlib.createGunzip());
     }
     return callback();
   },
-  onRequest(ctx, callback) {
-    ctx.proxyToServerRequestOptions.headers["accept-encoding"] = "gzip";
+  onRequest(ctx: IContext, callback: Function) {
+    ctx.proxyToServerRequestOptions!.headers["accept-encoding"] = "gzip";
     return callback();
   },
 };
