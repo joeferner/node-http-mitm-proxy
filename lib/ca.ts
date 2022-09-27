@@ -282,7 +282,7 @@ export class CA {
     );
     certServer.validity.notAfter = new Date();
     certServer.validity.notAfter.setFullYear(
-      certServer.validity.notBefore.getFullYear() + 2
+      certServer.validity.notBefore.getFullYear() + 1
     );
     const attrsServer = ServerAttrs.slice(0);
     attrsServer.unshift({
