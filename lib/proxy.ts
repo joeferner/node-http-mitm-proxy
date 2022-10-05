@@ -1071,20 +1071,24 @@ export class Proxy implements IProxy {
           if (err) {
             return self._onError("ON_RESPONSEHEADERS_ERROR", ctx, err);
           }
-          ctx.proxyToClientResponse.writeHead(
-            servToProxyResp!.statusCode!,
-            Proxy.filterAndCanonizeHeaders(servToProxyResp.headers)
-          );
-          // @ts-ignore
-          ctx.responseFilters.push(new ProxyFinalResponseFilter(self, ctx));
-          let prevResponsePipeElem = servToProxyResp;
-          ctx.responseFilters.forEach((filter) => {
-            filter.on(
-              "error",
-              self._onError.bind(self, "RESPONSE_FILTER_ERROR", ctx)
-            );
-            prevResponsePipeElem = prevResponsePipeElem.pipe(filter);
-          });
+		  try{
+			  ctx.proxyToClientResponse.writeHead(
+				servToProxyResp!.statusCode!,
+				Proxy.filterAndCanonizeHeaders(servToProxyResp.headers)
+			  );
+			  // @ts-ignore
+			  ctx.responseFilters.push(new ProxyFinalResponseFilter(self, ctx));
+			  let prevResponsePipeElem = servToProxyResp;
+			  ctx.responseFilters.forEach((filter) => {
+				filter.on(
+				  "error",
+				  self._onError.bind(self, "RESPONSE_FILTER_ERROR", ctx)
+				);
+				prevResponsePipeElem = prevResponsePipeElem.pipe(filter);
+			  });
+		  } catch (e) {
+				return self._onError('ON_RESPONSEHEADERS_ERROR_WRITE',ctx,e);
+		  }  
           return servToProxyResp.resume();
         });
       });
