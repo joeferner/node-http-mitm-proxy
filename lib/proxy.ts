@@ -1207,7 +1207,7 @@ export class Proxy implements IProxy {
         if (destWebSocket.readyState === WebSocket.OPEN) {
           switch (type) {
             case "message":
-              destWebSocket.send(data, flags as WebSocketFlags);
+              destWebSocket.send(data, {binary: flags as boolean});
               break;
             case "ping":
               destWebSocket.ping(data, flags as boolean);
