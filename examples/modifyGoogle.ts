@@ -18,7 +18,7 @@ proxy.onRequest((ctx, callback) => {
     ctx.use(Proxy.gunzip);
 
     ctx.onResponseData((ctx, chunk, callback) => {
-      chunk = new Buffer(
+      chunk = Buffer.from(
         chunk.toString().replace(/<h3.*?<\/h3>/g, "<h3>Pwned!</h3>")
       );
       return callback(null, chunk);
