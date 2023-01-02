@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "test": "cross-env TS_NODE_TRANSPILE_ONLY=true TS_NODE_PRETTY=true ts-mocha test/01_proxy.ts --exit",
-    "build": "rimraf dist && tsc"
+    "build": "rimraf dist && tsc",
+    "prepare": "npm run build"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",
   "bugs": {
