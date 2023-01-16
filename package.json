@@ -3,7 +3,7 @@
   "version": "0.10.2",
   "description": "HTTP Man In The Middle (MITM) Proxy",
   "main": "dist/index.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "cross-env TS_NODE_TRANSPILE_ONLY=true TS_NODE_PRETTY=true ts-mocha test/01_proxy.ts --exit",
     "build": "rimraf dist && tsc",
