@@ -1441,4 +1441,3 @@ export class Proxy implements IProxy {
     return headers;
   }
 }
-export default Proxy;

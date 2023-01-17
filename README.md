@@ -22,8 +22,10 @@ type definitions are now included in this project, no extra steps required.
 This example will modify any search results coming from google and replace all the result titles with "Pwned!".
 
 ```javascript
-var Proxy = require('http-mitm-proxy');
-var proxy = Proxy();
+const Proxy = require('http-mitm-proxy').Proxy;
+// or using import/module (package.json -> "type": "module")
+// import { Proxy } from "http-mitm-proxy";
+const proxy = new Proxy();
 
 proxy.onError(function(ctx, err) {
   console.error('proxy error:', err);
@@ -35,13 +37,14 @@ proxy.onRequest(function(ctx, callback) {
     ctx.use(Proxy.gunzip);
 
     ctx.onResponseData(function(ctx, chunk, callback) {
-      chunk = new Buffer(chunk.toString().replace(/<h3.*?<\/h3>/g, '<h3>Pwned!</h3>'));
+      chunk = Buffer.from(chunk.toString().replace(/<h3.*?<\/h3>/g, '<h3>Pwned!</h3>'));
       return callback(null, chunk);
     });
   }
   return callback();
 });
 
+console.log('begin listening on 8081')
 proxy.listen({port: 8081});
 ```
 

@@ -1,3 +1,1 @@
-import proxy from './lib/proxy'
-
-export default proxy;
+export { Proxy } from './lib/proxy'

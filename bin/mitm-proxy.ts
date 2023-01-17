@@ -4,7 +4,7 @@ import { hideBin } from "yargs/helpers";
 
 import d from "debug";
 const debug = d("http-mitm-proxy:bin");
-import Proxy from "../lib/proxy";
+import { Proxy } from "../lib/proxy";
 const proxy = new Proxy();
 
 const args = yargs(hideBin(process.argv))
