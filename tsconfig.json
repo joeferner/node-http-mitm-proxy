@@ -21,7 +21,8 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "typeRoots": ["./node_modules/@types", "./types.d.ts"],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "declaration": true
   },
   "include": ["lib/**/*.ts", "index.ts", "bin/*.ts"],
   "ts-node": {
