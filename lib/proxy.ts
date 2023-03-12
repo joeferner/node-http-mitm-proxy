@@ -670,7 +670,7 @@ export class Proxy implements IProxy {
           process.nextTick(sem.leave.bind(sem));
           self.sslServers[hostname] = {
             // @ts-ignore
-            port: self.sslServers[wildcardHost],
+            port: self.sslServers[wildcardHost].port,
           };
           return makeConnection(self.sslServers[hostname].port);
         }
