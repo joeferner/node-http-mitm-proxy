@@ -1,5 +1,5 @@
 import zlib from "zlib";
-import type { IContext } from "../../types";
+import type { IContext } from "../types";
 
 export default {
   onResponse(ctx: IContext, callback: Function) {

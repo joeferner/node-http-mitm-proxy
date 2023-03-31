@@ -3,7 +3,7 @@
  * group2: domain.ext
  * exclude short domains (length < 4) to avoid catching double extensions (ex: net.au, co.uk, ...)
  */
-import { ErrorCallback, IProxy } from "../../types";
+import { ErrorCallback, IProxy } from "../types";
 
 const HOSTNAME_REGEX = /^(.+)(\.[^.]{4,}(\.[^.]{1,3})*\.[^.]+)$/;
 

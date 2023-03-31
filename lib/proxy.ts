@@ -47,7 +47,7 @@ import type {
   OnWebSocketSendParams,
   IWebSocketCallback,
   OnRequestDataCallback,
-} from "../types";
+} from "./types";
 import type stream from "node:stream";
 export { wildcard, gunzip };
 
