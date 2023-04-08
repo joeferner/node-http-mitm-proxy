@@ -1,7 +1,7 @@
 {
-  "name": "http-mitm-proxy",
-  "version": "1.0.0",
-  "description": "HTTP Man In The Middle (MITM) Proxy",
+  "name": "custom-node-http-mitm-proxy",
+  "version": "0.1.0",
+  "description": "Custom HTTP Man In The Middle (MITM) Proxy",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,9 +9,9 @@
     "build": "rimraf dist && tsc",
     "prepare": "npm run build"
   },
-  "repository": "https://github.com/joeferner/node-http-mitm-proxy",
+  "repository": "https://github.com/kics223w1/custom-node-http-mitm-proxy",
   "bugs": {
-    "url": "https://github.com/joeferner/node-http-mitm-proxy/issues"
+    "url": "https://github.com/kics223w1/custom-node-http-mitm-proxy"
   },
   "bin": {
     "http-mitm-proxy": "./dist/bin/mitm-proxy.js"
@@ -24,12 +24,8 @@
     "websocket",
     "proxy"
   ],
-  "author": "Joe Ferner <joe@fernsroth.com>",
-  "contributors": [
-    "Félicien François <felicien@tweakstyle.com>",
-    "Simon Pratt <simon@pr4tt.com>",
-    "JonLuca DeCaro <jonluca.decaro@gmail.com>"
-  ],
+  "author": "Huy Cao",
+  "contributors": [],
   "license": "MIT",
   "engines": {
     "node": ">=8.0 <=16"
