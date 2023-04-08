@@ -1,15 +1,16 @@
-# Install
-
-[![NPM version](http://img.shields.io/npm/v/http-mitm-proxy.svg)](https://www.npmjs.com/package/custom-node-http-mitm-proxy)
-[![](https://david-dm.org/joeferner/node-http-mitm-proxy.svg)](https://www.npmjs.com/package/custom-node-http-mitm-proxy)
-
-`npm i custom-node-http-mitm-proxy`
-
 # Description
 
 - Special thanks to Joeferner for creating the great [node-http-mitm-proxy](https://github.com/joeferner/node-http-mitm-proxy) library
 - This rewrite library allows you can get the full request body before the `onRequest` event is triggered
 - I.e. If the request body doesn't meet your condition, you can prevent it to proceed to the real server.
+- If you want to see what I have changed please check out [this pull request](https://github.com/kics223w1/custom-node-http-mitm-proxy/commit/12d8d94a127ac06182d8dcbcafbaa224a82df7de)
+
+# Install
+
+[![NPM version](https://img.shields.io/npm/v/custom-node-http-mitm-proxy.svg)](https://www.npmjs.com/package/custom-node-http-mitm-proxy)
+[![](https://david-dm.org/joeferner/node-http-mitm-proxy.svg)](https://www.npmjs.com/package/custom-node-http-mitm-proxy)
+
+`npm i custom-node-http-mitm-proxy`
 
 # Example
 
