@@ -103,10 +103,7 @@ export type OnCertificateRequiredCallback = (
   error: MaybeError,
   certDetails: ICertDetails
 ) => void;
-export type OnRequestDataCallback = (
-  error?: MaybeError,
-  chunk?: Buffer
-) => void;
+export type OnRequestDataCallback = (error?: MaybeError, chunk?: Buffer) => void;
 export type OnRequestDataParams = (
   ctx: IContext,
   chunk: Buffer,
@@ -294,25 +291,22 @@ export type IContext = ICallbacks &
     /** filters added by .addResponseFilter() */
     responseFilters: any[];
 
-    /** contains the request body */
-    requestBodyBuffer: Buffer[];
-
     /** undocumented, allows adjusting the request in callbacks (such as .onRequest()) before sending  upstream (to proxy or target host)..
      * FYI these values seem pre-populated with defaults based on the request, you can modify them to change behavior. */
     proxyToServerRequestOptions:
-      | undefined
-      | {
-          /** ex: "GET" */
-          method: string;
-          /** ex: "/success.txt" */
-          path: string;
+    | undefined
+    | {
+      /** ex: "GET" */
+      method: string;
+      /** ex: "/success.txt" */
+      path: string;
 
-          /** example: "detectportal.firefox.com" */
-          host: string;
-          port: string | number | null | undefined;
-          headers: { [key: string]: string };
-          agent: http.Agent;
-        };
+      /** example: "detectportal.firefox.com" */
+      host: string;
+      port: string | number | null | undefined;
+      headers: { [key: string]: string };
+      agent: http.Agent;
+    };
 
     onRequestHandlers: OnRequestParams[];
     onResponseHandlers: OnRequestParams[];
