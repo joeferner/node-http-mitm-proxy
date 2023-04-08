@@ -19,7 +19,6 @@ import url from "url";
 import semaphore from "semaphore";
 import ca from "./ca";
 import { ProxyFinalResponseFilter } from "./ProxyFinalResponseFilter";
-import { ProxyFinalRequestFilter } from "./ProxyFinalRequestFilter";
 import { v4 as uuid } from "uuid";
 
 import gunzip from "./middleware/gunzip";
@@ -49,6 +48,7 @@ import type {
   OnRequestDataCallback,
 } from "./types";
 import type stream from "node:stream";
+import { ClientFinalRequestFilter } from "./ClientFinalRequestFilter";
 export { wildcard, gunzip };
 
 type HandlerType<T extends (...args: any[]) => any> = Array<Parameters<T>[0]>;
@@ -955,6 +955,7 @@ export class Proxy implements IProxy {
       onResponseEndHandlers: [],
       requestFilters: [],
       responseFilters: [],
+      requestBodyBuffer: [],
       responseContentPotentiallyModified: false,
       onRequest(fn) {
         ctx.onRequestHandlers.push(fn);
@@ -1096,19 +1097,29 @@ export class Proxy implements IProxy {
         ctx.proxyToServerRequestOptions!,
         proxyToServerRequestComplete
       );
+
       ctx.proxyToServerRequest.on(
         "error",
         self._onError.bind(self, "PROXY_TO_SERVER_REQUEST_ERROR", ctx)
       );
-      ctx.requestFilters.push(new ProxyFinalRequestFilter(self, ctx));
-      let prevRequestPipeElem = ctx.clientToProxyRequest;
-      ctx.requestFilters.forEach((filter) => {
-        filter.on(
-          "error",
-          self._onError.bind(self, "REQUEST_FILTER_ERROR", ctx)
-        );
-        prevRequestPipeElem = prevRequestPipeElem.pipe(filter);
-      });
+
+      // After the connection has completed, we process the request body
+      // from the proxy server to the real server
+      if (ctx.requestBodyBuffer.length === 0) {
+        ctx.proxyToServerRequest.end(undefined);
+      } else {
+        for (let i = 0; i < ctx.requestBodyBuffer.length; i++) {
+          if (i === ctx.requestBodyBuffer.length - 1) {
+            ctx.proxyToServerRequest.end(ctx.requestBodyBuffer[i]);
+          } else {
+            ctx.proxyToServerRequest.write(ctx.requestBodyBuffer[i]);
+          }
+        }
+      }
+
+      // Releasing the request data
+      // and resuming the request stream from client to proxy server.
+      ctx.requestBodyBuffer = [];
       ctx.clientToProxyRequest.resume();
     }
 
@@ -1138,6 +1149,22 @@ export class Proxy implements IProxy {
         headers,
         agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
       };
+
+      // Before making the connection between the proxy server and the real server,
+      // we emit the request body first, so the user can use this before the `onRequest` event is triggered.
+      ctx.requestFilters.push(new ClientFinalRequestFilter(self, ctx));
+      var prevRequestPipeElem = ctx.clientToProxyRequest;
+      ctx.requestFilters.forEach(function (filter) {
+        filter.on(
+          "error",
+          self._onError.bind(self, "LOAD_REQUEST_BODY_ERROR", ctx)
+        );
+        prevRequestPipeElem = prevRequestPipeElem.pipe(filter);
+      });
+
+      // Removing the ClientFinalRequestFilter object to prevent potential bugs after the work has done.
+      ctx.requestFilters.pop();
+
       return self._onRequest(ctx, (err) => {
         if (err) {
           return self._onError("ON_REQUEST_ERROR", ctx, err);
@@ -1207,7 +1234,7 @@ export class Proxy implements IProxy {
         if (destWebSocket.readyState === WebSocket.OPEN) {
           switch (type) {
             case "message":
-              destWebSocket.send(data, {binary: flags as boolean});
+              destWebSocket.send(data, { binary: flags as boolean });
               break;
             case "ping":
               destWebSocket.ping(data, flags as boolean);
