@@ -49,8 +49,7 @@ proxy.listen({port: 8081});
 ```
 
 You can find more examples in the [examples directory](https://github.com/joeferner/node-http-mitm-proxy/tree/master/examples)
-If you want to get the request body before creating connection between the proxy server and the real server (i.e. the `onRequestData`
-and `onRequestEnd` events will be emitted without invoking the callback in the `onRequest` event) . Let's check out [this library](https://github.com/kics223w1/custom-node-http-mitm-proxy)
+If you want to inspect the request body before sending it to the server, let's check out [this library](https://github.com/kics223w1/custom-node-http-mitm-proxy).
 # SSL
 
 Using node-forge allows the automatic generation of SSL certificates within the proxy. After running your app you will find options.sslCaDir + '/certs/ca.pem' which can be imported to your browser, phone, etc.
