@@ -2,11 +2,11 @@ node_modules/
 .vscode
 test/
 examples/
-lib/
-bin/
+/lib/
+/bin/
 .github/
 .env
 index.ts
 .gitingore
 .gitattributes
-tscconfig.json
+tsconfig.json
