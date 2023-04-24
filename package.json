@@ -1,13 +1,14 @@
 {
-  "name": "http-mitm-proxy",
-  "version": "1.0.0",
-  "description": "HTTP Man In The Middle (MITM) Proxy",
+  "name": "loadmill-http-mitm-proxy",
+  "version": "0.0.1",
+  "description": "Loadmill's HTTP Man In The Middle (MITM) Proxy",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "cross-env TS_NODE_TRANSPILE_ONLY=true TS_NODE_PRETTY=true ts-mocha test/01_proxy.ts --exit",
     "build": "rimraf dist && tsc",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "clean": "rimraf dist"
   },
   "repository": "https://github.com/joeferner/node-http-mitm-proxy",
   "bugs": {
@@ -17,6 +18,7 @@
     "http-mitm-proxy": "./dist/bin/mitm-proxy.js"
   },
   "keywords": [
+    "loadmill",
     "mitm",
     "http",
     "https",
@@ -24,12 +26,7 @@
     "websocket",
     "proxy"
   ],
-  "author": "Joe Ferner <joe@fernsroth.com>",
-  "contributors": [
-    "Félicien François <felicien@tweakstyle.com>",
-    "Simon Pratt <simon@pr4tt.com>",
-    "JonLuca DeCaro <jonluca.decaro@gmail.com>"
-  ],
+  "author": "Gilad Gur Andelman <gilad@loadmill.com>",
   "license": "MIT",
   "engines": {
     "node": ">=8.0 <=16"

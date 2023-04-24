@@ -1,4 +1,6 @@
-# HTTP MITM Proxy
+# Loadmill HTTP MITM Proxy
+#### This is a fork of [node-http-mitm-proxy](https://www.npmjs.com/package/http-mitm-proxy)
+#### _The main difference is that this library allows you to use a custom CA certificate arguments to the proxy._
 
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
