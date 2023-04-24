@@ -40,11 +40,13 @@ export interface IProxyOptions {
 
 export type CAOverrides = {
   /** - The common name of the certificate. (default: 'NodeMITMProxyCA') */
-  commonName ?: string;
+  commonName?: string;
   /** - The organization name of the certificate. (default: 'Node MITM Proxy CA') */
-  organizationName ?: string;
+  organizationName?: string;
   /** - The number of days the certificate is valid for. (default: 364) */
-  daysToExpire ?: number;
+  daysToExpire?: number;
+  /** - The short name of the organizational unit of the certificate. (default: 'Node MITM Proxy Server Certificate') */
+  OU?: string;
 };
 
 export interface IProxySSLServer {

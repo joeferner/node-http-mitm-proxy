@@ -135,12 +135,16 @@ export class CA {
   keysFolder!: string;
   CAcert!: ReturnType<typeof Forge.pki.createCertificate>;
   CAkeys!: ReturnType<typeof Forge.pki.rsa.generateKeyPair>;
+  CAattrs!: typeof CAattrs;
+  ServerAttrs!: typeof ServerAttrs;
 
   static create(caFolder, callback, overrides: IProxyOptions['caOverrides'] = {}) {
     const ca = new CA();
     ca.baseCAFolder = caFolder;
     ca.certsFolder = path.join(ca.baseCAFolder, "certs");
     ca.keysFolder = path.join(ca.baseCAFolder, "keys");
+    ca.CAattrs = getFinalCAattrs('ca', overrides);
+    ca.ServerAttrs = getFinalCAattrs('server', overrides);
     mkdirp.sync(ca.baseCAFolder);
     mkdirp.sync(ca.certsFolder);
     mkdirp.sync(ca.keysFolder);
@@ -197,9 +201,8 @@ export class CA {
       const { notBefore, notAfter } = getNotBeforeAndNotAfter(overrides?.daysToExpire);
       cert.validity.notBefore = notBefore;
       cert.validity.notAfter = notAfter;
-      const finalCAattrs = getFinalCAattrs(overrides);
-      cert.setSubject(finalCAattrs);
-      cert.setIssuer(finalCAattrs);
+      cert.setSubject(this.CAattrs);
+      cert.setIssuer(this.CAattrs);
       cert.setExtensions(CAextensions);
       cert.sign(keys.privateKey, md.sha256.create());
       self.CAcert = cert;
@@ -276,15 +279,10 @@ export class CA {
     const certServer = pki.createCertificate();
     certServer.publicKey = keysServer.publicKey;
     certServer.serialNumber = this.randomSerialNumber();
-    certServer.validity.notBefore = new Date();
-    certServer.validity.notBefore.setDate(
-      certServer.validity.notBefore.getDate() - 1
-    );
-    certServer.validity.notAfter = new Date();
-    certServer.validity.notAfter.setFullYear(
-      certServer.validity.notBefore.getFullYear() + 1
-    );
-    const attrsServer = ServerAttrs.slice(0);
+    const { notBefore, notAfter } = getNotBeforeAndNotAfter();
+    certServer.validity.notBefore = notBefore;
+    certServer.validity.notAfter = notAfter;
+    const attrsServer = this.ServerAttrs.slice(0);
     attrsServer.unshift({
       name: "commonName",
       value: mainHost,
@@ -368,10 +366,10 @@ function getNotBeforeAndNotAfter(days: number = 364) {
   return { notBefore, notAfter };
 }
 
-function getFinalCAattrs(caOverrides: Omit<CAOverrides, 'daysToExpire'> = {}) {
-  const res = CAattrs;
+function getFinalCAattrs(caOrServer: 'ca' | 'server', caOverrides: Omit<CAOverrides, 'daysToExpire'> = {}) {
+  const res = caOrServer ? CAattrs.slice(0) : ServerAttrs.slice(0);
   for (const [key, value] of Object.entries(caOverrides)) {
-    const attr = res.find((attr) => attr.name === key);
+    const attr = res.find((attr) => attr.name === key || attr.shortName === key);
     if (attr) {
       attr.value = value;
     }
