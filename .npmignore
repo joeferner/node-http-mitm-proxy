@@ -6,7 +6,7 @@ lib/
 bin/
 .github/
 .env
-*.ts
+index.ts
 .gitingore
 .gitattributes
 tscconfig.json
