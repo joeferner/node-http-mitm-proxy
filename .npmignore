@@ -1,0 +1,12 @@
+node_modules/
+.vscode
+test/
+examples/
+lib/
+bin/
+.github/
+.env
+*.ts
+.gitingore
+.gitattributes
+tscconfig.json

@@ -4,14 +4,14 @@
 
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
-[![NPM version](http://img.shields.io/npm/v/http-mitm-proxy.svg)](https://www.npmjs.com/package/http-mitm-proxy)
-[![](https://david-dm.org/joeferner/node-http-mitm-proxy.svg)](https://david-dm.org/joeferner/node-http-mitm-proxy)
-[![Downloads](https://img.shields.io/npm/dm/http-mitm-proxy.svg)](https://www.npmjs.com/package/http-mitm-proxy)
-![Test Status](https://github.com/joeferner/node-http-mitm-proxy/workflows/Tests/badge.svg)
+[![NPM version](http://img.shields.io/npm/v/loadmill-http-mitm-proxy.svg)](https://www.npmjs.com/package/loadmill-http-mitm-proxy)
+[![Downloads](https://img.shields.io/npm/dm/loadmill-http-mitm-proxy.svg)](https://www.npmjs.com/package/loadmill-http-mitm-proxy)
+![Test Status](https://github.com/loadmill/loadmill-http-mitm-proxy/workflows/Tests/badge.svg)
 
 # Install
 
-`npm install --save http-mitm-proxy`
+`yarn add loadmill-http-mitm-proxy`
+`npm install --save loadmill-http-mitm-proxy`
 
 ## Node.js Compatibility
 The library should work starting Node.js 8.x, but testing is only expected for currently supported LTS versions of Node.js starting Node.js 12.x . use on your own risk with non LTS Node.js versions.
