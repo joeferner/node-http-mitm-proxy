@@ -183,7 +183,7 @@ export class Proxy implements IProxy {
           callback();
         });
       }
-    });
+    }, options.caOverrides);
     return this;
   }
 

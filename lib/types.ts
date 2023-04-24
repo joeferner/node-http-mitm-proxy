@@ -34,7 +34,18 @@ export interface IProxyOptions {
   httpsPort?: number;
   /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
   forceChunkedRequest?: boolean;
+  /** - These options allows you to override some fields of the generated certificate. */
+  caOverrides?: CAOverrides;
 }
+
+export type CAOverrides = {
+  /** - The common name of the certificate. (default: 'NodeMITMProxyCA') */
+  commonName ?: string;
+  /** - The organization name of the certificate. (default: 'Node MITM Proxy CA') */
+  organizationName ?: string;
+  /** - The number of days the certificate is valid for. (default: 364) */
+  daysToExpire ?: number;
+};
 
 export interface IProxySSLServer {
   port: number;

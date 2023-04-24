@@ -5,6 +5,7 @@ const { pki, md } = Forge;
 import mkdirp from "mkdirp";
 import async from "async";
 import ErrnoException = NodeJS.ErrnoException;
+import { CAOverrides, IProxyOptions } from "./types";
 
 const CAattrs = [
   {
@@ -135,7 +136,7 @@ export class CA {
   CAcert!: ReturnType<typeof Forge.pki.createCertificate>;
   CAkeys!: ReturnType<typeof Forge.pki.rsa.generateKeyPair>;
 
-  static create(caFolder, callback) {
+  static create(caFolder, callback, overrides: IProxyOptions['caOverrides'] = {}) {
     const ca = new CA();
     ca.baseCAFolder = caFolder;
     ca.certsFolder = path.join(ca.baseCAFolder, "certs");
@@ -150,7 +151,7 @@ export class CA {
           if (exists) {
             ca.loadCA(callback);
           } else {
-            ca.generateCA(callback);
+            ca.generateCA(callback, overrides);
           }
         },
       ],
@@ -182,7 +183,8 @@ export class CA {
     callback: (
       err?: ErrnoException | null | undefined,
       results?: unknown[] | undefined
-    ) => void
+    ) => void,
+    overrides: IProxyOptions['caOverrides'],
   ) {
     const self = this;
     pki.rsa.generateKeyPair({ bits: 2048 }, (err, keys) => {
@@ -192,14 +194,12 @@ export class CA {
       const cert = pki.createCertificate();
       cert.publicKey = keys.publicKey;
       cert.serialNumber = self.randomSerialNumber();
-      cert.validity.notBefore = new Date();
-      cert.validity.notBefore.setDate(cert.validity.notBefore.getDate() - 1);
-      cert.validity.notAfter = new Date();
-      cert.validity.notAfter.setFullYear(
-        cert.validity.notBefore.getFullYear() + 1
-      );
-      cert.setSubject(CAattrs);
-      cert.setIssuer(CAattrs);
+      const { notBefore, notAfter } = getNotBeforeAndNotAfter(overrides?.daysToExpire);
+      cert.validity.notBefore = notBefore;
+      cert.validity.notAfter = notAfter;
+      const finalCAattrs = getFinalCAattrs(overrides);
+      cert.setSubject(finalCAattrs);
+      cert.setIssuer(finalCAattrs);
       cert.setExtensions(CAextensions);
       cert.sign(keys.privateKey, md.sha256.create());
       self.CAcert = cert;
@@ -351,6 +351,32 @@ export class CA {
   getCACertPath() {
     return `${this.certsFolder}/ca.pem`;
   }
+}
+
+/**
+ * Calculates the notBefore and notAfter dates for a certificate.
+ * 
+ * Should allow for a certificate to be valid for a minimum of 1 day and a maximum of 825 days.
+ * 
+ * @param days the number of days the certificate should be valid for
+ */
+function getNotBeforeAndNotAfter(days: number = 364) {
+  const notBefore = new Date();
+  const notAfter = new Date();
+  notBefore.setDate(notBefore.getDate() - 1);
+  notAfter.setDate(notAfter.getDate() + days);
+  return { notBefore, notAfter };
+}
+
+function getFinalCAattrs(caOverrides: Omit<CAOverrides, 'daysToExpire'> = {}) {
+  const res = CAattrs;
+  for (const [key, value] of Object.entries(caOverrides)) {
+    const attr = res.find((attr) => attr.name === key);
+    if (attr) {
+      attr.value = value;
+    }
+  }
+  return res;
 }
 
 export default CA;
