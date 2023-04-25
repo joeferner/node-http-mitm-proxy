@@ -198,9 +198,19 @@ export class CA {
       const cert = pki.createCertificate();
       cert.publicKey = keys.publicKey;
       cert.serialNumber = self.randomSerialNumber();
-      const { notBefore, notAfter } = getNotBeforeAndNotAfter(overrides?.daysToExpire);
-      cert.validity.notBefore = notBefore;
-      cert.validity.notAfter = notAfter;
+
+      if (overrides?.daysToExpire) {
+        const { notBefore, notAfter } = getNotBeforeAndNotAfter(overrides?.daysToExpire);
+        cert.validity.notBefore = notBefore;
+        cert.validity.notAfter = notAfter;
+      } else {
+        cert.validity.notBefore = new Date();
+        cert.validity.notBefore.setDate(cert.validity.notBefore.getDate() - 1);
+        cert.validity.notAfter = new Date();
+        cert.validity.notAfter.setFullYear(
+          cert.validity.notBefore.getFullYear() + 1
+        );
+      }
       cert.setSubject(this.CAattrs);
       cert.setIssuer(this.CAattrs);
       cert.setExtensions(CAextensions);
