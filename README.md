@@ -1,14 +1,21 @@
-# HTTP MITM Proxy
+# Loadmill HTTP MITM Proxy
+#### This is a fork of [node-http-mitm-proxy](https://www.npmjs.com/package/http-mitm-proxy)
+#### _The main difference is that this library allows you to use a custom CA certificate arguments to the proxy._
 
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
-[![](https://david-dm.org/joeferner/node-http-mitm-proxy.svg)](https://david-dm.org/joeferner/node-http-mitm-proxy)
-[![Build Status](https://travis-ci.org/joeferner/node-http-mitm-proxy.svg?branch=master)](https://travis-ci.org/joeferner/node-http-mitm-proxy)
-
+[![NPM version](http://img.shields.io/npm/v/loadmill-http-mitm-proxy.svg)](https://www.npmjs.com/package/loadmill-http-mitm-proxy)
+[![Downloads](https://img.shields.io/npm/dm/loadmill-http-mitm-proxy.svg)](https://www.npmjs.com/package/loadmill-http-mitm-proxy)
+![Test Status](https://github.com/loadmill/loadmill-http-mitm-proxy/workflows/Tests/badge.svg)
 
 # Install
 
-`npm install --save http-mitm-proxy`
+```yarn add loadmill-http-mitm-proxy```
+OR
+```npm install --save loadmill-http-mitm-proxy```
+
+## Node.js Compatibility
+The library should work starting Node.js 8.x, but testing is only expected for currently supported LTS versions of Node.js starting Node.js 12.x . use on your own risk with non LTS Node.js versions.
 
 ## Typescript
 type definitions are now included in this project, no extra steps required.
@@ -18,8 +25,10 @@ type definitions are now included in this project, no extra steps required.
 This example will modify any search results coming from google and replace all the result titles with "Pwned!".
 
 ```javascript
-var Proxy = require('http-mitm-proxy');
-var proxy = Proxy();
+const Proxy = require('http-mitm-proxy').Proxy;
+// or using import/module (package.json -> "type": "module")
+// import { Proxy } from "http-mitm-proxy";
+const proxy = new Proxy();
 
 proxy.onError(function(ctx, err) {
   console.error('proxy error:', err);
@@ -31,13 +40,14 @@ proxy.onRequest(function(ctx, callback) {
     ctx.use(Proxy.gunzip);
 
     ctx.onResponseData(function(ctx, chunk, callback) {
-      chunk = new Buffer(chunk.toString().replace(/<h3.*?<\/h3>/g, '<h3>Pwned!</h3>'));
+      chunk = Buffer.from(chunk.toString().replace(/<h3.*?<\/h3>/g, '<h3>Pwned!</h3>'));
       return callback(null, chunk);
     });
   }
   return callback();
 });
 
+console.log('begin listening on 8081')
 proxy.listen({port: 8081});
 ```
 
@@ -119,7 +129,7 @@ __Arguments__
 
  * options - An object with the following options:
   * port - The port or named socket to listen on (default: 8080).
-  * host - The hostname or local address to listen on.
+  * host - The hostname or local address to listen on (default: 'localhost'). Pass '::' to listen on all IPv4/IPv6 interfaces.
   * sslCaDir - Path to the certificates cache directory (default: process.cwd() + '/.http-mitm-proxy')
   * keepAlive - enable [HTTP persistent connection](https://en.wikipedia.org/wiki/HTTP_persistent_connection)
   * timeout - The number of milliseconds of inactivity before a socket is presumed to have timed out. Defaults to no timeout.
@@ -512,7 +522,7 @@ __Example__
 # License
 
 ```
-Copyright (c) 2015 Joe Ferner
+Copyright (c) 2023 Loadmill
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -537,3 +547,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
+# Original License
+
+```
+Copyright (c) 2015 Joe Ferner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
