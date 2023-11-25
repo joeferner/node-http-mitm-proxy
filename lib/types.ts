@@ -91,7 +91,7 @@ export type OnWebSocketCloseParams = (
 export interface ICertDetails {
   keyFile: string;
   certFile: string;
-  hosts: string[];
+  hosts?: string[];
 }
 
 export type MaybeError = Error | null | undefined;

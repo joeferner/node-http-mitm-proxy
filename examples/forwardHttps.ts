@@ -1,13 +1,17 @@
 const port = 8081;
 import net from "net";
 import assert from "assert";
-import Proxy from "../";
+import { Proxy } from "../";
 const proxy = new Proxy();
 import { exec } from "child_process";
 
 proxy.onConnect((req, socket, head) => {
+  if (!req.url) {
+    console.log("No url in request");
+    return;
+  }
   const host = req.url.split(":")[0];
-  const port = req.url.split(":")[1];
+  const port = parseInt(req.url.split(":")[1]);
 
   console.log("Tunnel to", req.url);
   const conn = net.connect(
@@ -23,7 +27,7 @@ proxy.onConnect((req, socket, head) => {
       socket.on("close", () => {
         conn.end();
       });
-      socket.write("HTTP/1.1 200 OK\r\n\r\n", "UTF-8", () => {
+      socket.write("HTTP/1.1 200 OK\r\n\r\n", "utf-8", () => {
         conn.pipe(socket);
         socket.pipe(conn);
       });

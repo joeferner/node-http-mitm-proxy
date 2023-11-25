@@ -1,6 +1,6 @@
 const port = 8081;
 
-import Proxy from "../";
+import { Proxy } from "../";
 const proxy = new Proxy();
 
 proxy.onError((ctx, err, errorKind) => {
@@ -13,7 +13,7 @@ proxy.onRequest((ctx, callback) => {
   //console.log('REQUEST: http://' + ctx.clientToProxyRequest.headers.host + ctx.clientToProxyRequest.url);
   if (
     ctx.clientToProxyRequest.headers.host == "www.google.com" &&
-    ctx.clientToProxyRequest.url.indexOf("/search") == 0
+    ctx.clientToProxyRequest.url?.indexOf("/search") == 0
   ) {
     ctx.use(Proxy.gunzip);
 

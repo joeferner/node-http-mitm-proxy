@@ -1,6 +1,6 @@
 const port = 8081;
 import path from "path";
-import Proxy from "../";
+import { Proxy } from "../";
 const proxy = new Proxy();
 
 proxy.onError((ctx, err, errorKind) => {
