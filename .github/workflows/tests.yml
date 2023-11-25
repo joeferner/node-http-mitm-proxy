@@ -16,6 +16,10 @@ on:
       - "v?[0-9]+.[0-9]+.[0-9]+-**"
   pull_request: {}
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
   # Performs quick checks before the expensive test runs
   check-and-lint:
