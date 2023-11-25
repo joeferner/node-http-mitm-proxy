@@ -7,7 +7,8 @@ import http from "http";
 import net from "net";
 import nodeStatic from "node-static";
 import WebSocket from "ws";
-import { Proxy } from "../lib/proxy";
+import { Proxy } from "../";
+import dns from "dns";
 
 const fileStaticA = new nodeStatic.Server(`${__dirname}/wwwA`);
 const fileStaticB = new nodeStatic.Server(`${__dirname}/wwwB`);
@@ -18,6 +19,10 @@ const testProxyPort = 40010;
 const testWSPort = 40007;
 const testUrlA = `http://${testHost}:${testPortA}`;
 const testUrlB = `http://${testHost}:${testPortB}`;
+
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 const getHttp = (url, cb) => {
   request({ url }, (err, resp, body) => {
