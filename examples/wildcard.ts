@@ -1,6 +1,6 @@
 const port = 8081;
 
-import Proxy from "../";
+import { Proxy } from "../";
 const proxy = new Proxy();
 
 proxy.use(Proxy.wildcard);

@@ -1,6 +1,6 @@
 const port = 8081;
 
-import Proxy from "../";
+import { Proxy } from "../";
 const proxy = new Proxy();
 
 proxy.onError((ctx, err, errorKind) => {
@@ -13,14 +13,15 @@ proxy.onError((ctx, err, errorKind) => {
 proxy.use(Proxy.gunzip);
 
 proxy.onRequest((ctx, callback) => {
-  const chunks = [];
+  const chunks = new Array<Buffer>();
   ctx.onResponseData((ctx, chunk, callback) => {
     chunks.push(chunk);
-    return callback(null, null); // don't write chunks to client response
+    return callback(null, undefined); // don't write chunks to client response
   });
   ctx.onResponseEnd((ctx, callback) => {
     let body: string | Buffer = Buffer.concat(chunks);
     if (
+      ctx.serverToProxyResponse !== undefined &&
       ctx.serverToProxyResponse.headers["content-type"] &&
       ctx.serverToProxyResponse.headers["content-type"].indexOf("text/html") ===
         0
