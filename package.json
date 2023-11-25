@@ -32,29 +32,29 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=8.0 <=16"
+    "node": ">=16"
   },
   "devDependencies": {
-    "@types/mocha": "10.0.x",
-    "@types/node": "18.11.x",
-    "cross-env": "7.0.x",
-    "mocha": "10.2.x",
-    "node-static": "0.7.x",
-    "prettier": "2.8.x",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.0",
+    "cross-env": "^7.0.3",
+    "mocha": "^10.2.0",
+    "node-static": "^0.7.11",
+    "prettier": "^3.1.0",
     "request": "^2.88.2",
-    "rimraf": "3.0.x",
-    "ts-mocha": "10.0.x",
-    "ts-node": "10.9.x",
-    "typescript": "4.9.x"
+    "rimraf": "^3.0.2",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
   },
   "dependencies": {
-    "async": "3.2.x",
-    "debug": "4.3.x",
-    "mkdirp": "1.0.x",
-    "node-forge": "1.3.x",
-    "semaphore": "1.1.x",
-    "uuid": "9.0.x",
-    "ws": "8.11.x",
-    "yargs": "17.6.x"
+    "async": "^3.2.5",
+    "debug": "^4.3.4",
+    "mkdirp": "^1.0.4",
+    "node-forge": "^1.3.1",
+    "semaphore": "^1.1.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.14.2",
+    "yargs": "^17.7.2"
   }
 }
