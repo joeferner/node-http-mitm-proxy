@@ -3,9 +3,8 @@
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
 [![NPM version](http://img.shields.io/npm/v/http-mitm-proxy.svg)](https://www.npmjs.com/package/http-mitm-proxy)
-[![](https://david-dm.org/joeferner/node-http-mitm-proxy.svg)](https://david-dm.org/joeferner/node-http-mitm-proxy)
 [![Downloads](https://img.shields.io/npm/dm/http-mitm-proxy.svg)](https://www.npmjs.com/package/http-mitm-proxy)
-![Test Status](https://github.com/joeferner/node-http-mitm-proxy/workflows/Tests/badge.svg)
+[![Test Status](https://github.com/joeferner/node-http-mitm-proxy/workflows/Tests/badge.svg)](https://github.com/joeferner/node-http-mitm-proxy/actions)
 
 # Install
 

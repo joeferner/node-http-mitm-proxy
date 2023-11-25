@@ -7,7 +7,8 @@ import http from "http";
 import net from "net";
 import nodeStatic from "node-static";
 import WebSocket from "ws";
-import { Proxy } from "../lib/proxy";
+import { Proxy } from "../";
+import dns from "dns";
 
 const fileStaticA = new nodeStatic.Server(`${__dirname}/wwwA`);
 const fileStaticB = new nodeStatic.Server(`${__dirname}/wwwB`);
@@ -18,6 +19,10 @@ const testProxyPort = 40010;
 const testWSPort = 40007;
 const testUrlA = `http://${testHost}:${testPortA}`;
 const testUrlB = `http://${testHost}:${testPortB}`;
+
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 const getHttp = (url, cb) => {
   request({ url }, (err, resp, body) => {
@@ -58,12 +63,12 @@ const countString = (str, substr, cb) => {
 
 describe("proxy", function () {
   this.timeout(30000);
-  let srvA = null;
-  let srvB = null;
-  let proxy = null;
+  let srvA: http.Server | null = null;
+  let srvB: http.Server | null = null;
+  let proxy: Proxy | null = null;
   const testHashes = {};
   const testFiles = ["1024.bin"];
-  let wss = null;
+  let wss: WebSocket.Server | null = null;
 
   before((done) => {
     testFiles.forEach((val) => {
@@ -116,23 +121,23 @@ describe("proxy", function () {
   });
 
   afterEach(() => {
-    proxy.close();
+    proxy?.close();
     proxy = null;
   });
 
   after(() => {
-    srvA.close();
+    srvA?.close();
     srvA = null;
-    srvB.close();
+    srvB?.close();
     srvB = null;
-    wss.close();
+    wss?.close();
     wss = null;
   });
 
   describe("ca server", () => {
     it("should generate a root CA file", (done) => {
       fs.access(`${__dirname}/../.http-mitm-proxy/certs/ca.pem`, (err) => {
-        let rtv = null;
+        let rtv: string | boolean | null = null;
         if (err) {
           rtv = `${__dirname}/../.http-mitm-proxy/certs/ca.pem ${err}`;
         } else {
@@ -300,13 +305,14 @@ describe("proxy", function () {
 
     describe("host match", () => {
       it("proxy and modify AAA 5 times if hostA", (done) => {
+        assert.ok(proxy);
         proxy.onRequest((ctx, callback) => {
           const testHostNameA = `127.0.0.1:${testPortA}`;
           if (ctx.clientToProxyRequest.headers.host === testHostNameA) {
-            const chunks = [];
+            const chunks: Buffer[] = [];
             ctx.onResponseData((ctx, chunk, callback) => {
               chunks.push(chunk);
-              return callback(null, null);
+              return callback(null, undefined);
             });
             ctx.onResponseEnd((ctx, callback) => {
               let body = Buffer.concat(chunks).toString();
@@ -359,6 +365,7 @@ describe("proxy", function () {
       });
 
       it("should use chunked transfer encoding when global onResponseData is active", (done) => {
+        assert.ok(proxy);
         proxy.onResponseData((ctx, chunk, callback) => {
           callback(null, chunk);
         });
@@ -375,6 +382,7 @@ describe("proxy", function () {
       });
 
       it("should use chunked transfer encoding when context onResponseData is active", (done) => {
+        assert.ok(proxy);
         proxy.onResponse((ctx, callback) => {
           ctx.onResponseData((ctx, chunk, callback) => {
             callback(null, chunk);
@@ -394,6 +402,7 @@ describe("proxy", function () {
       });
 
       it("should use chunked transfer encoding when context ResponseFilter is active", (done) => {
+        assert.ok(proxy);
         proxy.onResponse((ctx, callback) => {
           ctx.addResponseFilter(zlib.createGzip());
           callback(null);
@@ -454,6 +463,7 @@ describe("proxy", function () {
         close: false,
       };
 
+      assert.ok(proxy);
       proxy.onWebSocketConnection((ctx, callback) => {
         stats.connection = true;
         return callback();
