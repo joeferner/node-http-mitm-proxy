@@ -1052,6 +1052,9 @@ export class Proxy implements IProxy {
           return self._onError("ON_RESPONSE_ERROR", ctx, err);
         }
         const servToProxyResp = ctx.serverToProxyResponse!;
+        if(servToProxyResp.headers["trailer"]){
+          servToProxyResp.headers["transfer-encoding"] = "chunked";
+        }
         if (
           self.responseContentPotentiallyModified ||
           ctx.responseContentPotentiallyModified
