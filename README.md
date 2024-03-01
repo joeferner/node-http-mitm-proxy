@@ -48,6 +48,7 @@ proxy.listen({port: 8081});
 ```
 
 You can find more examples in the [examples directory](https://github.com/joeferner/node-http-mitm-proxy/tree/master/examples)
+If you want to inspect the request body before sending it to the server, let's check out [this library](https://github.com/kics223w1/custom-node-http-mitm-proxy).
 
 # SSL
 
