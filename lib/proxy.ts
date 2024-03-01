@@ -868,21 +868,29 @@ export class Proxy implements IProxy {
     } else {
       url = upgradeReq.url;
     }
-    const ptosHeaders = {};
-    const ctopHeaders = upgradeReq.headers;
-    for (const key in ctopHeaders) {
-      if (key.indexOf("sec-websocket") !== 0) {
-        ptosHeaders[key] = ctopHeaders[key];
+    const proxyToServerHeaders= {};
+    const clientToProxyHeaders = upgradeReq.headers;
+    for (const header in clientToProxyHeaders) {
+      if (header.indexOf("sec-websocket") !== 0) {
+        proxyToServerHeaders[header] = clientToProxyHeaders[header];
       }
     }
+
+    let protocols: string[] = [];
+    if(clientToProxyHeaders["sec-websocket-protocol"]) {
+      protocols = clientToProxyHeaders["sec-websocket-protocol"].split(",").map((p) => p.trim());
+    }
+
     ctx.proxyToServerWebSocketOptions = {
       url,
+      protocols: protocols.length > 0 ? protocols : undefined,
       agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
-      headers: ptosHeaders,
+      headers: proxyToServerHeaders,
     };
     function makeProxyToServerWebSocket() {
       ctx.proxyToServerWebSocket = new WebSocket(
         ctx.proxyToServerWebSocketOptions!.url!,
+        ctx.proxyToServerWebSocketOptions.protocols,
         ctx.proxyToServerWebSocketOptions
       );
       ctx.proxyToServerWebSocket.on(
