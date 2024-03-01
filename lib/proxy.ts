@@ -487,7 +487,7 @@ export class Proxy implements IProxy {
       const conn = net.connect(
         {
           port,
-          host: "0.0.0.0",
+          host: "localhost",
           allowHalfOpen: true,
         },
 
