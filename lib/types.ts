@@ -4,6 +4,7 @@ import type CA from "../lib/ca";
 import type WebSocket from "ws";
 import type { Server } from "https";
 import type { WebSocket as WebSocketType, WebSocketServer } from "ws";
+import { IncomingMessage } from "http";
 
 export interface IProxyStatic {
   (): IProxy;
@@ -35,6 +36,10 @@ export interface IProxyOptions {
   /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
   forceChunkedRequest?: boolean;
 }
+
+export type ExtendedWebSocketType = WebSocket.WebSocket & {
+  upgradeReq?: IncomingMessage;
+};
 
 export interface IProxySSLServer {
   port: number;
@@ -103,7 +108,10 @@ export type OnCertificateRequiredCallback = (
   error: MaybeError,
   certDetails: ICertDetails
 ) => void;
-export type OnRequestDataCallback = (error?: MaybeError, chunk?: Buffer) => void;
+export type OnRequestDataCallback = (
+  error?: MaybeError,
+  chunk?: Buffer
+) => void;
 export type OnRequestDataParams = (
   ctx: IContext,
   chunk: Buffer,
@@ -294,19 +302,19 @@ export type IContext = ICallbacks &
     /** undocumented, allows adjusting the request in callbacks (such as .onRequest()) before sending  upstream (to proxy or target host)..
      * FYI these values seem pre-populated with defaults based on the request, you can modify them to change behavior. */
     proxyToServerRequestOptions:
-    | undefined
-    | {
-      /** ex: "GET" */
-      method: string;
-      /** ex: "/success.txt" */
-      path: string;
+      | undefined
+      | {
+          /** ex: "GET" */
+          method: string;
+          /** ex: "/success.txt" */
+          path: string;
 
-      /** example: "detectportal.firefox.com" */
-      host: string;
-      port: string | number | null | undefined;
-      headers: { [key: string]: string };
-      agent: http.Agent;
-    };
+          /** example: "detectportal.firefox.com" */
+          host: string;
+          port: string | number | null | undefined;
+          headers: { [key: string]: string };
+          agent: http.Agent;
+        };
 
     onRequestHandlers: OnRequestParams[];
     onResponseHandlers: OnRequestParams[];
@@ -332,7 +340,10 @@ export type IWebSocketContext = IBaseContext & {
   /** instance of WebSocket object from https://github.com/websockets/ws */
   proxyToServerWebSocket?: WebSocketType;
 
-  proxyToServerWebSocketOptions?: WebSocket.ClientOptions & { url?: string };
+  proxyToServerWebSocketOptions?: WebSocket.ClientOptions & {
+    url?: string;
+    protocols?: string[];
+  };
   /** WebSocket Connection Hanlders */
   onWebSocketConnectionHandlers: OnWebsocketRequestParams[];
   onWebSocketFrameHandlers: OnWebSocketFrameParams[];

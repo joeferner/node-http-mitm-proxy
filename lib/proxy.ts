@@ -47,6 +47,7 @@ import type {
   OnWebSocketSendParams,
   IWebSocketCallback,
   OnRequestDataCallback,
+  ExtendedWebSocketType,
 } from "./types";
 import type stream from "node:stream";
 export { wildcard, gunzip };
@@ -157,7 +158,7 @@ export class Proxy implements IProxy {
         "error",
         self._onError.bind(self, "HTTP_SERVER_ERROR", null)
       );
-      self.wsServer.on("connection", (ws, req) => {
+      self.wsServer.on("connection", (ws: ExtendedWebSocketType, req) => {
         ws.upgradeReq = req;
         self._onWebSocketServerConnect.call(self, false, ws, req);
       });
@@ -207,7 +208,7 @@ export class Proxy implements IProxy {
     httpsServer.on("request", this._onHttpServerRequest.bind(this, true));
     const self = this;
     const wssServer = new WebSocketServer({ server: httpsServer });
-    wssServer.on("connection", (ws, req) => {
+    wssServer.on("connection", (ws: ExtendedWebSocketType, req) => {
       ws.upgradeReq = req;
       self._onWebSocketServerConnect.call(self, true, ws, req);
     });
@@ -890,7 +891,7 @@ export class Proxy implements IProxy {
     function makeProxyToServerWebSocket() {
       ctx.proxyToServerWebSocket = new WebSocket(
         ctx.proxyToServerWebSocketOptions!.url!,
-        ctx.proxyToServerWebSocketOptions.protocols,
+        ctx.proxyToServerWebSocketOptions?.protocols,
         ctx.proxyToServerWebSocketOptions
       );
       ctx.proxyToServerWebSocket.on(
