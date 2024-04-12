@@ -3,7 +3,8 @@ import https = require("https");
 import type CA from "../lib/ca";
 import type WebSocket from "ws";
 import type { Server } from "https";
-import type { WebSocket as WebSocketType, WebSocketServer } from "ws";
+import type { WebSocket as WebSocketType, WebSocketServer, RawData } from "ws";
+import { IncomingMessage } from "http";
 
 export interface IProxyStatic {
   (): IProxy;
@@ -11,6 +12,11 @@ export interface IProxyStatic {
   gunzip: any;
   /** mod to pass to the use() function: Generates wilcard certificates by default (so less certificates are generated)*/
   wildcard: any;
+}
+
+export type HostPort = {
+  host: string;
+  port: number;
 }
 
 export interface IProxyOptions {
@@ -34,7 +40,19 @@ export interface IProxyOptions {
   httpsPort?: number;
   /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
   forceChunkedRequest?: boolean;
+  /** if set, then this value will always be used for target Host as port */
+  target?: HostPort
 }
+
+export enum WebSocketTarget {
+  Void = "void",
+  Client = "client",
+  Server = "server",
+}
+
+export type ExtendedWebSocketType = WebSocket.WebSocket & {
+  upgradeReq?: IncomingMessage;
+};
 
 export interface IProxySSLServer {
   port: number;
@@ -54,19 +72,20 @@ export type OnWebsocketRequestParams = (
 ) => void;
 export type IWebSocketCallback = (
   err: MaybeError,
-  message?: any,
-  flags?: any
+  message: string | RawData,
+  flags?: boolean | object,
+  target?: WebSocketTarget
 ) => void;
 export type OnWebSocketSendParams = (
   ctx: IWebSocketContext,
-  message: any,
-  flags: any,
+  message: string | RawData,
+  isBinary: boolean,
   callback: IWebSocketCallback
 ) => void;
 export type OnWebSocketMessageParams = (
   ctx: IWebSocketContext,
-  message: any,
-  flags: any,
+  message: string | RawData,
+  isBinary: boolean,
   callback: IWebSocketCallback
 ) => void;
 export type OnWebSocketFrameParams = (
@@ -103,7 +122,10 @@ export type OnCertificateRequiredCallback = (
   error: MaybeError,
   certDetails: ICertDetails
 ) => void;
-export type OnRequestDataCallback = (error?: MaybeError, chunk?: Buffer) => void;
+export type OnRequestDataCallback = (
+  error?: MaybeError,
+  chunk?: Buffer
+) => void;
 export type OnRequestDataParams = (
   ctx: IContext,
   chunk: Buffer,
@@ -294,19 +316,19 @@ export type IContext = ICallbacks &
     /** undocumented, allows adjusting the request in callbacks (such as .onRequest()) before sending  upstream (to proxy or target host)..
      * FYI these values seem pre-populated with defaults based on the request, you can modify them to change behavior. */
     proxyToServerRequestOptions:
-    | undefined
-    | {
-      /** ex: "GET" */
-      method: string;
-      /** ex: "/success.txt" */
-      path: string;
+      | undefined
+      | {
+          /** ex: "GET" */
+          method: string;
+          /** ex: "/success.txt" */
+          path: string;
 
-      /** example: "detectportal.firefox.com" */
-      host: string;
-      port: string | number | null | undefined;
-      headers: { [key: string]: string };
-      agent: http.Agent;
-    };
+          /** example: "detectportal.firefox.com" */
+          host: string;
+          port: string | number | null | undefined;
+          headers: { [key: string]: string };
+          agent: http.Agent;
+        };
 
     onRequestHandlers: OnRequestParams[];
     onResponseHandlers: OnRequestParams[];
@@ -328,11 +350,14 @@ export interface ICertficateContext {
 
 export type IWebSocketContext = IBaseContext & {
   /** instance of WebSocket object from https://github.com/websockets/ws */
-  clientToProxyWebSocket?: WebSocketType;
+  clientToProxyWebSocket?: ExtendedWebSocketType;
   /** instance of WebSocket object from https://github.com/websockets/ws */
-  proxyToServerWebSocket?: WebSocketType;
+  proxyToServerWebSocket?: ExtendedWebSocketType;
 
-  proxyToServerWebSocketOptions?: WebSocket.ClientOptions & { url?: string };
+  proxyToServerWebSocketOptions?: WebSocket.ClientOptions & {
+    url?: string;
+    protocols?: string[];
+  };
   /** WebSocket Connection Hanlders */
   onWebSocketConnectionHandlers: OnWebsocketRequestParams[];
   onWebSocketFrameHandlers: OnWebSocketFrameParams[];

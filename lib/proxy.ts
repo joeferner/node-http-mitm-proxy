@@ -24,29 +24,31 @@ import { v4 as uuid } from "uuid";
 
 import gunzip from "./middleware/gunzip";
 import wildcard from "./middleware/wildcard";
-import type {
-  ICertDetails,
-  IContext,
-  IProxy,
-  IProxyOptions,
-  ErrorCallback,
-  ICertficateContext,
-  ICreateServerCallback,
-  IProxySSLServer,
-  IWebSocketContext,
-  OnCertificateRequiredCallback,
-  OnConnectParams,
-  OnErrorParams,
-  OnRequestDataParams,
-  OnRequestParams,
-  OnWebSocketCloseParams,
-  OnWebSocketErrorParams,
-  OnWebSocketFrameParams,
-  OnWebSocketMessageParams,
-  OnWebsocketRequestParams,
-  OnWebSocketSendParams,
-  IWebSocketCallback,
-  OnRequestDataCallback,
+import {
+  type ICertDetails,
+  type IContext,
+  type IProxy,
+  type IProxyOptions,
+  type ErrorCallback,
+  type ICertficateContext,
+  type ICreateServerCallback,
+  type IProxySSLServer,
+  type IWebSocketContext,
+  type OnCertificateRequiredCallback,
+  type OnConnectParams,
+  type OnErrorParams,
+  type OnRequestDataParams,
+  type OnRequestParams,
+  type OnWebSocketCloseParams,
+  type OnWebSocketErrorParams,
+  type OnWebSocketFrameParams,
+  type OnWebSocketMessageParams,
+  type OnWebsocketRequestParams,
+  type OnWebSocketSendParams,
+  type OnRequestDataCallback,
+  type ExtendedWebSocketType,
+  WebSocketTarget,
+  HostPort,
 } from "./types";
 import type stream from "node:stream";
 export { wildcard, gunzip };
@@ -93,6 +95,7 @@ export class Proxy implements IProxy {
   timeout!: number;
   wsServer: WebSocketServer | undefined;
   wssServer: WebSocketServer | undefined;
+  target: HostPort | undefined;
   static wildcard = wildcard;
   static gunzip = gunzip;
 
@@ -118,6 +121,7 @@ export class Proxy implements IProxy {
     const self = this;
 
     this.options = options || {};
+    this.target = options.target;
     this.httpPort = options.port || options.port === 0 ? options.port : 8080;
     this.httpHost = options.host || "localhost";
     this.timeout = options.timeout || 0;
@@ -157,7 +161,7 @@ export class Proxy implements IProxy {
         "error",
         self._onError.bind(self, "HTTP_SERVER_ERROR", null)
       );
-      self.wsServer.on("connection", (ws, req) => {
+      self.wsServer.on("connection", (ws: ExtendedWebSocketType, req) => {
         ws.upgradeReq = req;
         self._onWebSocketServerConnect.call(self, false, ws, req);
       });
@@ -207,7 +211,7 @@ export class Proxy implements IProxy {
     httpsServer.on("request", this._onHttpServerRequest.bind(this, true));
     const self = this;
     const wssServer = new WebSocketServer({ server: httpsServer });
-    wssServer.on("connection", (ws, req) => {
+    wssServer.on("connection", (ws: ExtendedWebSocketType, req) => {
       ws.upgradeReq = req;
       self._onWebSocketServerConnect.call(self, true, ws, req);
     });
@@ -833,10 +837,17 @@ export class Proxy implements IProxy {
       },
     };
     const clientToProxyWebSocket = ctx.clientToProxyWebSocket!;
-    clientToProxyWebSocket.on(
-      "message",
-      self._onWebSocketFrame.bind(self, ctx, "message", false)
-    );
+
+    clientToProxyWebSocket.onmessage = (event) => {
+      self._onWebSocketFrame(
+        ctx,
+        "message",
+        false,
+        event.data,
+        typeof event.data !== "string"
+      );
+    };
+
     clientToProxyWebSocket.on(
       "ping",
       self._onWebSocketFrame.bind(self, ctx, "ping", false)
@@ -860,7 +871,7 @@ export class Proxy implements IProxy {
 
     let url;
     if (upgradeReq.url == "" || /^\//.test(upgradeReq.url!)) {
-      const hostPort = Proxy.parseHostAndPort(upgradeReq);
+      const hostPort = this.target ?? Proxy.parseHostAndPort(upgradeReq);
 
       const prefix = ctx.isSSL ? "wss" : "ws";
       const port = hostPort!.port ? ":" + hostPort!.port : "";
@@ -868,7 +879,7 @@ export class Proxy implements IProxy {
     } else {
       url = upgradeReq.url;
     }
-    const proxyToServerHeaders= {};
+    const proxyToServerHeaders = {};
     const clientToProxyHeaders = upgradeReq.headers;
     for (const header in clientToProxyHeaders) {
       if (header.indexOf("sec-websocket") !== 0) {
@@ -877,8 +888,10 @@ export class Proxy implements IProxy {
     }
 
     let protocols: string[] = [];
-    if(clientToProxyHeaders["sec-websocket-protocol"]) {
-      protocols = clientToProxyHeaders["sec-websocket-protocol"].split(",").map((p) => p.trim());
+    if (clientToProxyHeaders["sec-websocket-protocol"]) {
+      protocols = clientToProxyHeaders["sec-websocket-protocol"]
+        .split(",")
+        .map((p) => p.trim());
     }
 
     ctx.proxyToServerWebSocketOptions = {
@@ -890,13 +903,20 @@ export class Proxy implements IProxy {
     function makeProxyToServerWebSocket() {
       ctx.proxyToServerWebSocket = new WebSocket(
         ctx.proxyToServerWebSocketOptions!.url!,
-        ctx.proxyToServerWebSocketOptions.protocols,
+        ctx.proxyToServerWebSocketOptions?.protocols,
         ctx.proxyToServerWebSocketOptions
       );
-      ctx.proxyToServerWebSocket.on(
-        "message",
-        self._onWebSocketFrame.bind(self, ctx, "message", true)
-      );
+
+      ctx.proxyToServerWebSocket.onmessage = (event) => {
+        self._onWebSocketFrame(
+          ctx,
+          "message",
+          true,
+          event.data,
+          typeof event.data !== "string"
+        );
+      };
+
       ctx.proxyToServerWebSocket.on(
         "ping",
         self._onWebSocketFrame.bind(self, ctx, "ping", true)
@@ -1042,7 +1062,7 @@ export class Proxy implements IProxy {
       self._onError.bind(self, "PROXY_TO_CLIENT_RESPONSE_ERROR", ctx)
     );
     ctx.clientToProxyRequest.pause();
-    const hostPort = Proxy.parseHostAndPort(
+    const hostPort = this.target ?? Proxy.parseHostAndPort(
       ctx.clientToProxyRequest,
       ctx.isSSL ? 443 : 80
     );
@@ -1195,32 +1215,58 @@ export class Proxy implements IProxy {
     ctx: IWebSocketContext,
     type: string,
     fromServer: boolean,
-    data: WebSocket.RawData,
-    flags?: WebSocketFlags | boolean
+    data: string | WebSocket.RawData,
+    flags?:
+      | boolean
+      | {
+          mask?: boolean | undefined;
+          binary?: boolean | undefined;
+          compress?: boolean | undefined;
+          fin?: boolean | undefined;
+        }
   ) {
+    let target = fromServer ? WebSocketTarget.Client : WebSocketTarget.Server;
     const self = this;
     async.forEach(
       this.onWebSocketFrameHandlers.concat(ctx.onWebSocketFrameHandlers),
-      (fn, callback: IWebSocketCallback) =>
-        fn(ctx, type, fromServer, data, flags, (err, newData, newFlags) => {
-          if (err) {
-            return callback(err);
+      (fn, callback) =>
+        fn(
+          ctx,
+          type,
+          fromServer,
+          data,
+          flags,
+          (err, newData, newFlags, newTarget) => {
+            if (err) {
+              return callback(err);
+            }
+            data = newData;
+            flags = newFlags;
+            if (newTarget) {
+              target = newTarget;
+            }
+            return callback(null);
           }
-          data = newData;
-          flags = newFlags;
-          return callback(null, data, flags);
-        }),
+        ),
       (err) => {
         if (err) {
           return self._onWebSocketError(ctx, err);
         }
-        const destWebSocket = fromServer
-          ? ctx.clientToProxyWebSocket!
-          : ctx.proxyToServerWebSocket!;
+        if (target === WebSocketTarget.Void) {
+          return;
+        }
+
+        const destWebSocket =
+          target === WebSocketTarget.Client
+            ? ctx.clientToProxyWebSocket!
+            : ctx.proxyToServerWebSocket!;
         if (destWebSocket.readyState === WebSocket.OPEN) {
           switch (type) {
             case "message":
-              destWebSocket.send(data, {binary: flags as boolean});
+              destWebSocket.send(
+                data,
+                typeof flags === "boolean" ? { binary: flags } : (flags as {})
+              );
               break;
             case "ping":
               destWebSocket.ping(data, flags as boolean);

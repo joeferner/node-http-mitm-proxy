@@ -9,31 +9,32 @@ proxy.onError((ctx, err, errorKind) => {
   console.error(`${errorKind} on ${url}:`, err);
 });
 proxy.onWebSocketConnection((ctx, callback) => {
-  console.log("WEBSOCKET CONNECT:", ctx.clientToProxyWebSocket.upgradeReq.url);
+  console.log("WEBSOCKET CONNECT:", ctx.clientToProxyWebSocket?.upgradeReq?.url);
   return callback();
 });
-proxy.onWebSocketFrame((ctx, type, fromServer, message, flags, callback) => {
+proxy.onWebSocketSend((ctx, message, isBinary, callback) => {
   console.log(
-    `WEBSOCKET FRAME ${type} received from ${fromServer ? "server" : "client"}`,
-    ctx.clientToProxyWebSocket.upgradeReq.url,
+    `WEBSOCKET Message received from client}`,
+    ctx.clientToProxyWebSocket?.upgradeReq?.url,
     message
   );
-  if (message) {
+  if (typeof message === 'string') {
     const hackedMessage = message.replace(/Rock it/gi, "Hack it");
+    return callback(null, hackedMessage, false);
   }
-  return callback(null, message, flags);
+  return callback(null, message, isBinary);
 });
 proxy.onWebSocketError((ctx, err) => {
   console.log(
     "WEBSOCKET ERROR ",
-    ctx.clientToProxyWebSocket.upgradeReq.url,
+    ctx.clientToProxyWebSocket?.upgradeReq?.url,
     err
   );
 });
 proxy.onWebSocketClose((ctx, code, message, callback) => {
   console.log(
     `WEBSOCKET CLOSED BY ${ctx.closedByServer ? "SERVER" : "CLIENT"}`,
-    ctx.clientToProxyWebSocket.upgradeReq.url,
+    ctx.clientToProxyWebSocket?.upgradeReq?.url,
     code,
     message
   );
