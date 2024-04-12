@@ -14,6 +14,11 @@ export interface IProxyStatic {
   wildcard: any;
 }
 
+export type HostPort = {
+  host: string;
+  port: number;
+}
+
 export interface IProxyOptions {
   /**port - The port or named socket to listen on (default: 8080).*/
   port?: number;
@@ -35,6 +40,8 @@ export interface IProxyOptions {
   httpsPort?: number;
   /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
   forceChunkedRequest?: boolean;
+  /** if set, then this value will always be used for target Host as port */
+  target?: HostPort
 }
 
 export enum WebSocketTarget {

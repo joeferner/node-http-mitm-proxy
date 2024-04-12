@@ -48,6 +48,7 @@ import {
   type OnRequestDataCallback,
   type ExtendedWebSocketType,
   WebSocketTarget,
+  HostPort,
 } from "./types";
 import type stream from "node:stream";
 export { wildcard, gunzip };
@@ -94,6 +95,7 @@ export class Proxy implements IProxy {
   timeout!: number;
   wsServer: WebSocketServer | undefined;
   wssServer: WebSocketServer | undefined;
+  target: HostPort | undefined;
   static wildcard = wildcard;
   static gunzip = gunzip;
 
@@ -119,6 +121,7 @@ export class Proxy implements IProxy {
     const self = this;
 
     this.options = options || {};
+    this.target = options.target;
     this.httpPort = options.port || options.port === 0 ? options.port : 8080;
     this.httpHost = options.host || "localhost";
     this.timeout = options.timeout || 0;
@@ -868,7 +871,7 @@ export class Proxy implements IProxy {
 
     let url;
     if (upgradeReq.url == "" || /^\//.test(upgradeReq.url!)) {
-      const hostPort = Proxy.parseHostAndPort(upgradeReq);
+      const hostPort = this.target ?? Proxy.parseHostAndPort(upgradeReq);
 
       const prefix = ctx.isSSL ? "wss" : "ws";
       const port = hostPort!.port ? ":" + hostPort!.port : "";
@@ -1059,7 +1062,7 @@ export class Proxy implements IProxy {
       self._onError.bind(self, "PROXY_TO_CLIENT_RESPONSE_ERROR", ctx)
     );
     ctx.clientToProxyRequest.pause();
-    const hostPort = Proxy.parseHostAndPort(
+    const hostPort = this.target ?? Proxy.parseHostAndPort(
       ctx.clientToProxyRequest,
       ctx.isSSL ? 443 : 80
     );
