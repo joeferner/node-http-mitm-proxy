@@ -3,7 +3,7 @@ import https = require("https");
 import type CA from "../lib/ca";
 import type WebSocket from "ws";
 import type { Server } from "https";
-import type { WebSocket as WebSocketType, WebSocketServer } from "ws";
+import type { WebSocket as WebSocketType, WebSocketServer, RawData } from "ws";
 import { IncomingMessage } from "http";
 
 export interface IProxyStatic {
@@ -37,6 +37,12 @@ export interface IProxyOptions {
   forceChunkedRequest?: boolean;
 }
 
+export enum WebSocketTarget {
+  Void = "void",
+  Client = "client",
+  Server = "server",
+}
+
 export type ExtendedWebSocketType = WebSocket.WebSocket & {
   upgradeReq?: IncomingMessage;
 };
@@ -59,19 +65,20 @@ export type OnWebsocketRequestParams = (
 ) => void;
 export type IWebSocketCallback = (
   err: MaybeError,
-  message?: any,
-  flags?: any
+  message: string | RawData,
+  flags?: boolean | object,
+  target?: WebSocketTarget
 ) => void;
 export type OnWebSocketSendParams = (
   ctx: IWebSocketContext,
-  message: any,
-  flags: any,
+  message: string | RawData,
+  isBinary: boolean,
   callback: IWebSocketCallback
 ) => void;
 export type OnWebSocketMessageParams = (
   ctx: IWebSocketContext,
-  message: any,
-  flags: any,
+  message: string | RawData,
+  isBinary: boolean,
   callback: IWebSocketCallback
 ) => void;
 export type OnWebSocketFrameParams = (

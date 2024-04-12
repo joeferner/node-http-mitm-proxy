@@ -24,30 +24,30 @@ import { v4 as uuid } from "uuid";
 
 import gunzip from "./middleware/gunzip";
 import wildcard from "./middleware/wildcard";
-import type {
-  ICertDetails,
-  IContext,
-  IProxy,
-  IProxyOptions,
-  ErrorCallback,
-  ICertficateContext,
-  ICreateServerCallback,
-  IProxySSLServer,
-  IWebSocketContext,
-  OnCertificateRequiredCallback,
-  OnConnectParams,
-  OnErrorParams,
-  OnRequestDataParams,
-  OnRequestParams,
-  OnWebSocketCloseParams,
-  OnWebSocketErrorParams,
-  OnWebSocketFrameParams,
-  OnWebSocketMessageParams,
-  OnWebsocketRequestParams,
-  OnWebSocketSendParams,
-  IWebSocketCallback,
-  OnRequestDataCallback,
-  ExtendedWebSocketType,
+import {
+  type ICertDetails,
+  type IContext,
+  type IProxy,
+  type IProxyOptions,
+  type ErrorCallback,
+  type ICertficateContext,
+  type ICreateServerCallback,
+  type IProxySSLServer,
+  type IWebSocketContext,
+  type OnCertificateRequiredCallback,
+  type OnConnectParams,
+  type OnErrorParams,
+  type OnRequestDataParams,
+  type OnRequestParams,
+  type OnWebSocketCloseParams,
+  type OnWebSocketErrorParams,
+  type OnWebSocketFrameParams,
+  type OnWebSocketMessageParams,
+  type OnWebsocketRequestParams,
+  type OnWebSocketSendParams,
+  type OnRequestDataCallback,
+  type ExtendedWebSocketType,
+  WebSocketTarget,
 } from "./types";
 import type stream from "node:stream";
 export { wildcard, gunzip };
@@ -834,10 +834,17 @@ export class Proxy implements IProxy {
       },
     };
     const clientToProxyWebSocket = ctx.clientToProxyWebSocket!;
-    clientToProxyWebSocket.on(
-      "message",
-      self._onWebSocketFrame.bind(self, ctx, "message", false)
-    );
+
+    clientToProxyWebSocket.onmessage = (event) => {
+      self._onWebSocketFrame(
+        ctx,
+        "message",
+        false,
+        event.data,
+        typeof event.data !== "string"
+      );
+    };
+
     clientToProxyWebSocket.on(
       "ping",
       self._onWebSocketFrame.bind(self, ctx, "ping", false)
@@ -869,7 +876,7 @@ export class Proxy implements IProxy {
     } else {
       url = upgradeReq.url;
     }
-    const proxyToServerHeaders= {};
+    const proxyToServerHeaders = {};
     const clientToProxyHeaders = upgradeReq.headers;
     for (const header in clientToProxyHeaders) {
       if (header.indexOf("sec-websocket") !== 0) {
@@ -878,8 +885,10 @@ export class Proxy implements IProxy {
     }
 
     let protocols: string[] = [];
-    if(clientToProxyHeaders["sec-websocket-protocol"]) {
-      protocols = clientToProxyHeaders["sec-websocket-protocol"].split(",").map((p) => p.trim());
+    if (clientToProxyHeaders["sec-websocket-protocol"]) {
+      protocols = clientToProxyHeaders["sec-websocket-protocol"]
+        .split(",")
+        .map((p) => p.trim());
     }
 
     ctx.proxyToServerWebSocketOptions = {
@@ -894,10 +903,17 @@ export class Proxy implements IProxy {
         ctx.proxyToServerWebSocketOptions?.protocols,
         ctx.proxyToServerWebSocketOptions
       );
-      ctx.proxyToServerWebSocket.on(
-        "message",
-        self._onWebSocketFrame.bind(self, ctx, "message", true)
-      );
+
+      ctx.proxyToServerWebSocket.onmessage = (event) => {
+        self._onWebSocketFrame(
+          ctx,
+          "message",
+          true,
+          event.data,
+          typeof event.data !== "string"
+        );
+      };
+
       ctx.proxyToServerWebSocket.on(
         "ping",
         self._onWebSocketFrame.bind(self, ctx, "ping", true)
@@ -1196,32 +1212,58 @@ export class Proxy implements IProxy {
     ctx: IWebSocketContext,
     type: string,
     fromServer: boolean,
-    data: WebSocket.RawData,
-    flags?: WebSocketFlags | boolean
+    data: string | WebSocket.RawData,
+    flags?:
+      | boolean
+      | {
+          mask?: boolean | undefined;
+          binary?: boolean | undefined;
+          compress?: boolean | undefined;
+          fin?: boolean | undefined;
+        }
   ) {
+    let target = fromServer ? WebSocketTarget.Client : WebSocketTarget.Server;
     const self = this;
     async.forEach(
       this.onWebSocketFrameHandlers.concat(ctx.onWebSocketFrameHandlers),
-      (fn, callback: IWebSocketCallback) =>
-        fn(ctx, type, fromServer, data, flags, (err, newData, newFlags) => {
-          if (err) {
-            return callback(err);
+      (fn, callback) =>
+        fn(
+          ctx,
+          type,
+          fromServer,
+          data,
+          flags,
+          (err, newData, newFlags, newTarget) => {
+            if (err) {
+              return callback(err);
+            }
+            data = newData;
+            flags = newFlags;
+            if (newTarget) {
+              target = newTarget;
+            }
+            return callback(null);
           }
-          data = newData;
-          flags = newFlags;
-          return callback(null, data, flags);
-        }),
+        ),
       (err) => {
         if (err) {
           return self._onWebSocketError(ctx, err);
         }
-        const destWebSocket = fromServer
-          ? ctx.clientToProxyWebSocket!
-          : ctx.proxyToServerWebSocket!;
+        if (target === WebSocketTarget.Void) {
+          return;
+        }
+
+        const destWebSocket =
+          target === WebSocketTarget.Client
+            ? ctx.clientToProxyWebSocket!
+            : ctx.proxyToServerWebSocket!;
         if (destWebSocket.readyState === WebSocket.OPEN) {
           switch (type) {
             case "message":
-              destWebSocket.send(data, {binary: flags as boolean});
+              destWebSocket.send(
+                data,
+                typeof flags === "boolean" ? { binary: flags } : (flags as {})
+              );
               break;
             case "ping":
               destWebSocket.ping(data, flags as boolean);
