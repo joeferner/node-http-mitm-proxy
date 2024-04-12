@@ -1,4 +1,4 @@
-# Everest Node Proxy (Frok from HTTP MITM Proxy)
+# Everest Node Proxy (Fork from HTTP MITM Proxy)
 
 HTTP Man In The Middle (MITM) Proxy written in node.js. Supports capturing and modifying the request and response data.
 
