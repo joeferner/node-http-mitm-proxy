@@ -343,9 +343,9 @@ export interface ICertficateContext {
 
 export type IWebSocketContext = IBaseContext & {
   /** instance of WebSocket object from https://github.com/websockets/ws */
-  clientToProxyWebSocket?: WebSocketType;
+  clientToProxyWebSocket?: ExtendedWebSocketType;
   /** instance of WebSocket object from https://github.com/websockets/ws */
-  proxyToServerWebSocket?: WebSocketType;
+  proxyToServerWebSocket?: ExtendedWebSocketType;
 
   proxyToServerWebSocketOptions?: WebSocket.ClientOptions & {
     url?: string;

@@ -12,16 +12,17 @@ proxy.onWebSocketConnection((ctx, callback) => {
   console.log("WEBSOCKET CONNECT:", ctx.clientToProxyWebSocket?.upgradeReq?.url);
   return callback();
 });
-proxy.onWebSocketFrame((ctx, type, fromServer, message, flags, callback) => {
+proxy.onWebSocketSend((ctx, message, isBinary, callback) => {
   console.log(
-    `WEBSOCKET FRAME ${type} received from ${fromServer ? "server" : "client"}`,
+    `WEBSOCKET Message received from client}`,
     ctx.clientToProxyWebSocket?.upgradeReq?.url,
     message
   );
-  if (message) {
+  if (typeof message === 'string') {
     const hackedMessage = message.replace(/Rock it/gi, "Hack it");
+    return callback(null, hackedMessage, false);
   }
-  return callback(null, message, flags);
+  return callback(null, message, isBinary);
 });
 proxy.onWebSocketError((ctx, err) => {
   console.log(
