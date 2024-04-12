@@ -8,7 +8,7 @@ jobs:
   release-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v2
+      - uses: google-github-actions/release-please-action@v3
         id: release-please
         with:
           default-branch: master
@@ -20,7 +20,7 @@ jobs:
   github-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@v2
+      - uses: GoogleCloudPlatform/release-please-action@v3
         id: tag-release
         with:
           bump-minor-pre-major: true
@@ -28,7 +28,7 @@ jobs:
           token: ${{ secrets.GPR_TOKEN }}
           release-type: node
           command: github-release
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ steps.tag-release.outputs.release_created }}
 
       - uses: actions/setup-node@v1
