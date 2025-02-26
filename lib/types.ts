@@ -4,6 +4,7 @@ import type CA from "../lib/ca";
 import type WebSocket from "ws";
 import type { Server } from "https";
 import type { WebSocket as WebSocketType, WebSocketServer } from "ws";
+import type { LookupFunction } from 'net';
 
 export interface IProxyStatic {
   (): IProxy;
@@ -34,6 +35,8 @@ export interface IProxyOptions {
   httpsPort?: number;
   /** - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding */
   forceChunkedRequest?: boolean;
+  /** - The DNS lookup function to use. This option can be used to avoid the default synchronous DNS resolution. See #314 for details. */
+  lookup?: LookupFunction;
 }
 
 export interface IProxySSLServer {
@@ -306,6 +309,7 @@ export type IContext = ICallbacks &
       port: string | number | null | undefined;
       headers: { [key: string]: string };
       agent: http.Agent;
+      lookup: LookupFunction | undefined;
     };
 
     onRequestHandlers: OnRequestParams[];

@@ -134,6 +134,7 @@ __Arguments__
   * forceSNI - force use of [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication) by the client. Allow node-http-mitm-proxy to handle all HTTPS requests with a single internal server.
   * httpsPort - The port or named socket for https server to listen on. _(forceSNI must be enabled)_
   * forceChunkedRequest - Setting this option will remove the content-length from the proxy to server request, forcing chunked encoding.
+  * lookup - The DNS lookup function to use. This option can be used to avoid the default synchronous DNS resolution. See [#314](https://github.com/joeferner/node-http-mitm-proxy/issues/314) for details.
 
 __Example__
 

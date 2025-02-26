@@ -1150,6 +1150,7 @@ export class Proxy implements IProxy {
         port: hostPort.port,
         headers,
         agent: ctx.isSSL ? self.httpsAgent : self.httpAgent,
+        lookup: this.options.lookup,
       };
       return self._onRequest(ctx, (err) => {
         if (err) {
